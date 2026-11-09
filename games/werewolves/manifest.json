@@ -1,0 +1,25 @@
+{
+  "slug": "werewolves",
+  "name": "Werewolves",
+  "description": "Find the werewolves before they take the village.",
+  "players": { "min": 5, "max": 16 },
+  "modes": ["phones"],
+  "howToPlay": [
+    "Everyone gets a secret role: villager, werewolf, seer or doctor.",
+    "At night, the werewolves pick a victim, the seer checks someone and the doctor protects someone.",
+    "By day, everyone talks and votes someone out.",
+    "The village wins when the werewolves are gone; the werewolves win when they equal the village."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Varulver",
+      "description": "Finn varulvene før de tar landsbyen.",
+      "howToPlay": [
+        "Alle får en hemmelig rolle: landsbyboer, varulv, spåkone eller lege.",
+        "Om natten velger varulvene et offer, spåkona sjekker noen og legen beskytter noen.",
+        "Om dagen snakker alle og stemmer ut en spiller.",
+        "Landsbyen vinner når varulvene er borte; varulvene vinner når de er like mange som landsbyen."
+      ]
+    }
+  }
+}

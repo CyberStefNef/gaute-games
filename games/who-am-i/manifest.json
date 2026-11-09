@@ -1,0 +1,23 @@
+{
+  "slug": "who-am-i",
+  "name": "Who Am I?",
+  "description": "Phone on your forehead. Guess the word from the hints.",
+  "players": { "min": 2, "max": 16 },
+  "modes": ["shared"],
+  "howToPlay": [
+    "On your turn, hold the phone to your forehead without looking.",
+    "The others give hints without saying the word.",
+    "Guess as many words as you can in 60 seconds. Pass if you’re stuck."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Hvem er jeg?",
+      "description": "Telefonen på panna. Gjett ordet ut fra hintene.",
+      "howToPlay": [
+        "Når det er din tur, holder du telefonen mot panna uten å se.",
+        "De andre gir hint uten å si ordet.",
+        "Gjett så mange ord du kan på 60 sekunder. Pass hvis du står fast."
+      ]
+    }
+  }
+}

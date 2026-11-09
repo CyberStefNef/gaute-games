@@ -1,0 +1,23 @@
+{
+  "slug": "charades",
+  "name": "Charades",
+  "description": "Act it out without a word. The others guess.",
+  "players": { "min": 2, "max": 16 },
+  "modes": ["pass"],
+  "howToPlay": [
+    "Pass the phone to the actor. Only they see the word.",
+    "Act it out without speaking while the others shout guesses.",
+    "Get as many as you can in 60 seconds. Skip if it’s too hard."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Mimeleken",
+      "description": "Mim det uten ord. De andre gjetter.",
+      "howToPlay": [
+        "Gi telefonen til den som skal mime. Bare de ser ordet.",
+        "Mim uten å snakke mens de andre roper ut gjetninger.",
+        "Få så mange du kan på 60 sekunder. Hopp over hvis det er for vanskelig."
+      ]
+    }
+  }
+}
