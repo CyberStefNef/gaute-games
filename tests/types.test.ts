@@ -8,7 +8,7 @@ import { gameClient, useStrings } from '../sdk/react.tsx';
 
 test('actions, payloads and views are inferred from the rules', () => {
   expectTypeOf<ActionName<typeof imposter>>().toEqualTypeOf<
-    'seen' | 'startVote' | 'vote' | 'accuse' | 'reveal' | 'nextRound'
+    'seen' | 'startVote' | 'vote' | 'accuse' | 'reveal' | 'guessWord' | 'nextRound'
   >();
   expectTypeOf<PayloadOf<typeof imposter, 'vote'>>().toEqualTypeOf<{ target: string }>();
   expectTypeOf<PayloadOf<typeof imposter, 'startVote'>>().toEqualTypeOf<null>();
@@ -32,7 +32,7 @@ test('a page can only send the game’s actions with their payloads', () => {
     // @ts-expect-error actions without a payload take none
     void act('startVote', { target: 'p2' });
     // @ts-expect-error not part of the view
-    void view.word.secret;
+    void view.secretWord;
   };
   expect(typeof page).toBe('function');
 });

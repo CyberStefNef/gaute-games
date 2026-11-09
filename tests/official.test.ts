@@ -47,16 +47,18 @@ async function session(slug: string, mode: Mode, players: string[], seed = 9) {
   };
 }
 
-test('Imposter keeps the secret word from the imposter and scores the vote', async () => {
+test('Imposter keeps the word from the imposter, who sees only the category and gets a last chance', async () => {
   const players = ['p1', 'p2', 'p3', 'p4'];
   const game = await session('imposter', 'phones', players);
   const imposters = players.filter((p) => game.view(p).role === 'imposter');
   expect(imposters).toHaveLength(1);
   const [imposter] = imposters;
   expect(game.view(imposter).word).toBeNull();
+  expect(game.view(imposter).category).toBe(game.view('p1').category);
   const words = new Set(players.filter((p) => p !== imposter).map((p) => game.view(p).word));
   expect(words.size).toBe(1);
-  expect(JSON.stringify(game.view(imposter))).not.toContain([...words][0]);
+  const word = [...words][0];
+  expect(JSON.stringify(game.view(imposter))).not.toContain(word);
   expect(await game.act('p1', 'vote', { target: 'p2' })).toEqual({
     ok: false,
     reason: 'Voting is not open.',
@@ -66,14 +68,23 @@ test('Imposter keeps the secret word from the imposter and scores the vote', asy
     await game.act(voter, 'vote', {
       target: voter === imposter ? players.find((p) => p !== voter) : imposter,
     });
-  expect(game.view('p1').reveal.caught).toBe(true);
-  await game.act('p1', 'nextRound');
+  // Caught: only the imposter gets the six choices, and nobody else can answer.
+  expect(game.view(imposter).phase).toBe('guess');
+  const options: string[] = game.view(imposter).options;
+  expect(options).toHaveLength(6);
+  expect(options).toContain(word);
   const crew = players.filter((p) => p !== imposter);
+  expect(game.view(crew[0]).options).toEqual([]);
+  expect((await game.act(crew[0], 'guessWord', { value: 0 })).ok).toBe(false);
+  // A wrong guess: the crew scores.
+  await game.act(imposter, 'guessWord', { value: options.findIndex((o) => o !== word) });
+  expect(game.view('p1').reveal).toMatchObject({ caught: imposter, stole: false });
   expect(crew.map((p) => game.view(p).scores[p])).toEqual([1, 1, 1]);
+  await game.act('p1', 'nextRound');
   expect(game.view('p1').round).toBe(2);
 });
 
-test('Imposter passes one phone so each player sees only their role, then the group accuses', async () => {
+test('Imposter passes one phone for roles and the last chance, and a right guess steals the round', async () => {
   const players = ['p1', 'p2', 'p3'];
   const game = await session('imposter', 'pass', players);
   const roles: Record<string, string> = {};
@@ -88,13 +99,16 @@ test('Imposter passes one phone so each player sees only their role, then the gr
   }
   expect(game.current.turn).toBeNull();
   const imposter = players.find((p) => roles[p] === 'imposter')!;
+  const crewMember = players.find((p) => roles[p] === 'crew')!;
+  const word = game.view(crewMember).word;
   await game.act(null, 'startVote');
-  expect(await game.act(null, 'vote', { target: imposter })).toEqual({
-    ok: false,
-    reason: 'Voting is not open.',
-  });
   await game.act(null, 'accuse', { target: imposter });
-  expect(game.view('*').reveal).toMatchObject({ caught: true, imposter });
+  // The phone goes to the caught imposter for the last chance.
+  expect(game.current.turn).toBe(imposter);
+  const options: string[] = game.view(imposter).options;
+  await game.act(imposter, 'guessWord', { value: options.indexOf(word) });
+  expect(game.view('*').reveal).toMatchObject({ caught: imposter, stole: true });
+  expect(game.view(imposter).scores[imposter]).toBe(3);
 });
 
 test('Tonight Cards reveals votes, ends rules and finishes the deck', async () => {

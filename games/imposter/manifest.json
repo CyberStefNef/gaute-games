@@ -8,20 +8,20 @@
   },
   "modes": ["phones", "pass"],
   "howToPlay": [
-    "Everyone gets the secret word, except the imposter.",
-    "Take turns giving a one-word clue.",
-    "Vote for who you think is bluffing.",
-    "Catch the imposter for a point each. If they get away, they score two."
+    "Everyone sees the secret word, except the imposter, who only sees the category.",
+    "Take turns giving a one-word clue, then vote for who’s bluffing.",
+    "Caught imposters get one last chance: guess the word and steal the round.",
+    "With seven or more players, there are two imposters."
   ],
   "translations": {
     "nb": {
       "name": "Imposter",
       "description": "Én spiller kan ikke ordet. Finn dem.",
       "howToPlay": [
-        "Alle får det hemmelige ordet, unntatt imposteren.",
-        "Gi et hint på ett ord, etter tur.",
-        "Stem på den dere tror bløffer.",
-        "Ta imposteren for ett poeng hver. Slipper den unna, får den to."
+        "Alle ser det hemmelige ordet, unntatt imposteren, som bare ser kategorien.",
+        "Gi et hint på ett ord etter tur, og stem på den som bløffer.",
+        "En avslørt imposter får én siste sjanse: gjett ordet og stjel runden.",
+        "Med sju eller flere spillere er det to impostere."
       ]
     }
   }

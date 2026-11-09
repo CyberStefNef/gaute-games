@@ -196,3 +196,81 @@ export function Scores({ scores }: { scores: Record<string, number> }) {
     </div>
   );
 }
+
+/** Text with `{p1}`/`{p2}` replaced by highlighted player names. */
+export function NamedText({ text, refs }: { text: string; refs: Record<string, string> }) {
+  const { name } = useGame();
+  return text.split(/(\{p[12]\})/).map((part, index) => {
+    const player = /^\{p[12]\}$/.test(part) ? refs[part.slice(1, -1)] : undefined;
+    return player ? (
+      <span key={index} className="text-primary">
+        {name(player)}
+      </span>
+    ) : (
+      part
+    );
+  });
+}
+
+/** End-of-game awards: a funny title per player, from the game's statistics. */
+export function Awards({
+  awards,
+  heading,
+  title,
+}: {
+  awards: { title: string; player: string; count: number }[];
+  heading: string;
+  /** The award's display name, from its key. */
+  title: (key: string) => string;
+}) {
+  const { name } = useGame();
+  if (!awards.length) return null;
+  return (
+    <Card>
+      <Label>{heading}</Label>
+      <div className="flex flex-col divide-y divide-border">
+        {awards.map((award) => (
+          <div
+            key={award.title}
+            className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+          >
+            <span className="font-semibold">{title(award.title)}</span>
+            <span className="text-muted-foreground">{name(award.player)}</span>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+/** A first choice of pack or category: one large button per option. */
+export function PackPicker({
+  heading,
+  packs,
+  onPick,
+}: {
+  heading: string;
+  packs: { name: string; hint: string }[];
+  onPick: (index: number) => void;
+}) {
+  const { busy, playing } = useGame();
+  return (
+    <Hero>
+      <Title>{heading}</Title>
+      <div className="flex w-full flex-col gap-2">
+        {packs.map((pack, index) => (
+          <button
+            key={pack.name}
+            type="button"
+            disabled={busy || !playing}
+            onClick={() => onPick(index)}
+            className="flex flex-col gap-0.5 rounded-xl border-2 border-border bg-background px-4 py-3 text-left active:border-primary disabled:opacity-60"
+          >
+            <span className="text-lg font-bold">{pack.name}</span>
+            <span className="text-sm text-muted-foreground">{pack.hint}</span>
+          </button>
+        ))}
+      </div>
+    </Hero>
+  );
+}
