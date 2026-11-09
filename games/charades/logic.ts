@@ -1,131 +1,119 @@
-import { defineGame, endGame, invalid, type PlayerHandle } from '@gaute/games-sdk/logic';
-import { langOf, score, shuffled, zeroScores, type Lang, type Text } from '../_kit/rules';
+import { defineGame } from '@gaute/games-sdk/logic';
+import { option, type Text } from '../_kit/rules';
+import {
+  leave,
+  pickPack,
+  settleWord,
+  start,
+  timedSetup,
+  timedView,
+  timeUp,
+  turnPlayer,
+  type Word,
+  type WordPack,
+} from '../_kit/timed';
 
 // Pass the phone to the actor: only they see the word and act it out without
-// speaking. Each player has one timed turn; every word guessed is a point.
-const WORDS: Text[] = [
-  { en: 'Brushing your teeth', nb: 'Pusse tennene' },
-  { en: 'Riding a horse', nb: 'Ri på en hest' },
-  { en: 'Making pancakes', nb: 'Lage pannekaker' },
-  { en: 'Walking a dog', nb: 'Gå tur med hunden' },
-  { en: 'Skiing', nb: 'Gå på ski' },
-  { en: 'Playing the drums', nb: 'Spille trommer' },
-  { en: 'Taking a selfie', nb: 'Ta en selfie' },
-  { en: 'Fishing', nb: 'Fiske' },
-  { en: 'Changing a nappy', nb: 'Skifte bleie' },
-  { en: 'Climbing a mountain', nb: 'Klatre i fjellet' },
-  { en: 'Ironing a shirt', nb: 'Stryke en skjorte' },
-  { en: 'Juggling', nb: 'Sjonglere' },
-  { en: 'Driving in traffic', nb: 'Kjøre i kø' },
-  { en: 'Eating spaghetti', nb: 'Spise spagetti' },
-  { en: 'Surfing', nb: 'Surfe' },
-  { en: 'Building a snowman', nb: 'Lage snømann' },
-  { en: 'Playing football', nb: 'Spille fotball' },
-  { en: 'Doing yoga', nb: 'Gjøre yoga' },
-  { en: 'Waiting for the bus', nb: 'Vente på bussen' },
-  { en: 'Blowing up a balloon', nb: 'Blåse opp en ballong' },
-  { en: 'Painting a wall', nb: 'Male en vegg' },
-  { en: 'Rowing a boat', nb: 'Ro en båt' },
-  { en: 'Baking a cake', nb: 'Bake en kake' },
-  { en: 'Watching a horror film', nb: 'Se en skrekkfilm' },
-  { en: 'Ice skating', nb: 'Gå på skøyter' },
-  { en: 'Chopping onions', nb: 'Hakke løk' },
-  { en: 'Lifting weights', nb: 'Løfte vekter' },
-  { en: 'Conducting an orchestra', nb: 'Dirigere et orkester' },
-  { en: 'Planting a tree', nb: 'Plante et tre' },
-  { en: 'Playing tennis', nb: 'Spille tennis' },
-  { en: 'Getting a haircut', nb: 'Klippe håret' },
-  { en: 'Catching a fly', nb: 'Fange en flue' },
-  { en: 'Opening a stuck jar', nb: 'Åpne et glass som sitter fast' },
-  { en: 'Walking on ice', nb: 'Gå på glatta' },
-  { en: 'Singing in the shower', nb: 'Synge i dusjen' },
-  { en: 'Flying a kite', nb: 'Fly med drage' },
-  { en: 'Knitting', nb: 'Strikke' },
-  { en: 'Playing chess', nb: 'Spille sjakk' },
-  { en: 'Riding a rollercoaster', nb: 'Kjøre berg-og-dal-bane' },
-  { en: 'Hailing a taxi', nb: 'Praie en taxi' },
-  { en: 'Grilling sausages', nb: 'Grille pølser' },
-  { en: 'Doing the laundry', nb: 'Vaske klær' },
-  { en: 'Bowling', nb: 'Bowle' },
-  { en: 'Rocking a baby', nb: 'Vugge en baby' },
-  { en: 'Swimming the butterfly', nb: 'Svømme butterfly' },
-  { en: 'Taking a photo of a group', nb: 'Ta gruppebilde' },
+// speaking. Pick a category first. One 60-second turn each; hard words score 2.
+const x = (en: string, nb: string): Text => ({ en, nb });
+const hard = (en: string, nb: string): Word => ({ en, nb, hard: true });
+
+const PACKS: WordPack[] = [
+  {
+    name: x('Everyday', 'Hverdag'),
+    hint: x('Things everybody does', 'Ting alle gjør'),
+    words: [
+      x('Brushing your teeth', 'Pusse tennene'),
+      x('Making pancakes', 'Lage pannekaker'),
+      x('Walking a dog', 'Gå tur med hunden'),
+      x('Taking a selfie', 'Ta en selfie'),
+      x('Ironing a shirt', 'Stryke en skjorte'),
+      x('Waiting for the bus', 'Vente på bussen'),
+      x('Chopping onions', 'Hakke løk'),
+      x('Opening a stuck jar', 'Åpne et glass som sitter fast'),
+      x('Singing in the shower', 'Synge i dusjen'),
+      x('Doing the laundry', 'Vaske klær'),
+      hard('Assembling flat-pack furniture', 'Skru sammen flatpakkmøbler'),
+      hard('Missing the last bus', 'Miste siste buss'),
+      hard('Walking on ice', 'Gå på glatta'),
+      hard('Changing a nappy', 'Skifte bleie'),
+    ],
+  },
+  {
+    name: x('Sports & hobbies', 'Sport og hobby'),
+    hint: x('Moves you can mime', 'Bevegelser du kan mime'),
+    words: [
+      x('Skiing', 'Gå på ski'),
+      x('Fishing', 'Fiske'),
+      x('Surfing', 'Surfe'),
+      x('Juggling', 'Sjonglere'),
+      x('Playing the drums', 'Spille trommer'),
+      x('Doing yoga', 'Gjøre yoga'),
+      x('Bowling', 'Bowle'),
+      x('Ice skating', 'Gå på skøyter'),
+      x('Lifting weights', 'Løfte vekter'),
+      x('Playing tennis', 'Spille tennis'),
+      hard('Curling', 'Curling'),
+      hard('Fencing', 'Fekting'),
+      hard('Synchronised swimming', 'Synkronsvømming'),
+      hard('Knitting', 'Strikke'),
+    ],
+  },
+  {
+    name: x('Jobs & roles', 'Yrker og roller'),
+    hint: x('Who are you being?', 'Hvem spiller du?'),
+    words: [
+      x('Pilot', 'Pilot'),
+      x('Chef', 'Kokk'),
+      x('Hairdresser', 'Frisør'),
+      x('Dentist', 'Tannlege'),
+      x('Firefighter', 'Brannkonstabel'),
+      x('Waiter', 'Servitør'),
+      x('Photographer', 'Fotograf'),
+      x('Conductor', 'Dirigent'),
+      x('Painter', 'Maler'),
+      x('Lifeguard', 'Badevakt'),
+      hard('Air traffic controller', 'Flygeleder'),
+      hard('Mime artist', 'Mimekunstner'),
+      hard('Tour guide', 'Guide'),
+      hard('Magician', 'Tryllekunstner'),
+    ],
+  },
+  {
+    name: x('Wild', 'Ville'),
+    hint: x('Strange situations, big laughs', 'Rare situasjoner, mye latter'),
+    words: [
+      x('Riding a rollercoaster', 'Kjøre berg-og-dal-bane'),
+      x('Catching a fly', 'Fange en flue'),
+      x('Building a snowman', 'Lage snømann'),
+      x('Flying a kite', 'Fly med drage'),
+      x('Watching a horror film', 'Se en skrekkfilm'),
+      x('Blowing up a balloon', 'Blåse opp en ballong'),
+      hard('Escaping from a bee', 'Flykte fra en bie'),
+      hard('Being stuck in a lift', 'Sitte fast i en heis'),
+      hard('Walking a cat on a lead', 'Gå tur med en katt i bånd'),
+      hard('A penguin learning to fly', 'En pingvin som lærer å fly'),
+      hard('Losing your phone in the sofa', 'Miste mobilen i sofaen'),
+      hard('A robot falling in love', 'En robot som forelsker seg'),
+    ],
+  },
 ];
 
-type State = {
-  lang: Lang;
-  players: PlayerHandle[];
-  current: number;
-  turns: number;
-  order: number[];
-  at: number;
-  playing: boolean;
-  turnScore: number;
-  scores: Record<PlayerHandle, number>;
-};
-
-const actor = (state: State) => state.players[state.current % state.players.length];
-function nextWord(state: State) {
-  state.at = (state.at + 1) % state.order.length;
-}
-
 export const game = defineGame({
-  setup: ({ players, locale, random }): State => ({
-    lang: langOf(locale),
-    players: [...players],
-    current: 0,
-    turns: 0,
-    order: shuffled(WORDS.length, random),
-    at: 0,
-    playing: false,
-    turnScore: 0,
-    scores: zeroScores(players),
-  }),
+  setup: ({ players, locale }) => timedSetup(players, locale),
   actions: (action) => ({
-    start: action((state) => {
-      if (state.playing) invalid('The turn has started.');
-      state.playing = true;
-      state.turnScore = 0;
+    pick: action({
+      payload: option(PACKS.length),
+      run: (state, { payload, random }) => pickPack(state, PACKS, payload.value, random),
     }),
-    guessed: action((state) => {
-      if (!state.playing) invalid('Start the turn first.');
-      score(state.scores, actor(state));
-      state.turnScore += 1;
-      nextWord(state);
-    }),
-    skip: action((state) => {
-      if (!state.playing) invalid('Start the turn first.');
-      nextWord(state);
-    }),
-    timeUp: action((state) => {
-      if (!state.playing) invalid('Start the turn first.');
-      state.playing = false;
-      nextWord(state);
-      state.turns += 1;
-      if (state.turns >= state.players.length) {
-        endGame({ scores: state.scores });
-        return;
-      }
-      state.current = (state.current + 1) % state.players.length;
-    }),
+    start: action((state) => start(state)),
+    guessed: action((state) => settleWord(state, PACKS, true)),
+    skip: action((state) => settleWord(state, PACKS, false)),
+    timeUp: action((state) => timeUp(state)),
   }),
-  // The phone goes to the actor for their whole turn.
-  turn: (state) => actor(state),
-  playerLeft: (state, { playerId }) => {
-    const index = state.players.indexOf(playerId);
-    state.players = state.players.filter((p) => p !== playerId);
-    if (index < state.current) state.current -= 1;
-    if (state.current >= state.players.length) state.current = 0;
-  },
-  view: (state, playerId) => ({
-    actor: actor(state),
-    playing: state.playing,
-    // Only the actor sees the word; the shared screen never does.
-    word:
-      state.playing && playerId === actor(state) ? WORDS[state.order[state.at]][state.lang] : null,
-    turn: state.turns + 1,
-    turns: state.players.length,
-    turnScore: state.turnScore,
-    scores: state.scores,
-  }),
+  // The phone goes to the actor for their whole turn, once a category is chosen.
+  turn: (state) => (state.pack === null ? null : turnPlayer(state)),
+  playerLeft: (state, { playerId }) => leave(state, playerId),
+  // Only the actor sees the word.
+  view: (state, playerId) => timedView(state, PACKS, playerId === turnPlayer(state)),
 });

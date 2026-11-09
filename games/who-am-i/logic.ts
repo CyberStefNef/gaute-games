@@ -1,130 +1,134 @@
-import { defineGame, endGame, invalid, type PlayerHandle } from '@gaute/games-sdk/logic';
-import { langOf, score, shuffled, zeroScores, type Lang, type Text } from '../_kit/rules';
+import { defineGame } from '@gaute/games-sdk/logic';
+import { option, type Text } from '../_kit/rules';
+import {
+  leave,
+  pickPack,
+  settleWord,
+  start,
+  timedSetup,
+  timedView,
+  timeUp,
+  type Word,
+  type WordPack,
+} from '../_kit/timed';
 
 // One phone on the guesser's forehead: the others see the word and give hints.
-// Each player has one timed turn; every word guessed is a point.
-const WORDS: Text[] = [
-  { en: 'Penguin', nb: 'Pingvin' },
-  { en: 'Astronaut', nb: 'Astronaut' },
-  { en: 'Pirate', nb: 'Pirat' },
-  { en: 'Dentist', nb: 'Tannlege' },
-  { en: 'Vampire', nb: 'Vampyr' },
-  { en: 'Santa Claus', nb: 'Julenissen' },
-  { en: 'Giraffe', nb: 'Sjiraff' },
-  { en: 'Firefighter', nb: 'Brannmann' },
-  { en: 'Robot', nb: 'Robot' },
-  { en: 'Mermaid', nb: 'Havfrue' },
-  { en: 'Chef', nb: 'Kokk' },
-  { en: 'Dragon', nb: 'Drage' },
-  { en: 'Moose', nb: 'Elg' },
-  { en: 'Viking', nb: 'Viking' },
-  { en: 'Ghost', nb: 'Spøkelse' },
-  { en: 'Teacher', nb: 'Lærer' },
-  { en: 'Lighthouse', nb: 'Fyrtårn' },
-  { en: 'Snowman', nb: 'Snømann' },
-  { en: 'Kangaroo', nb: 'Kenguru' },
-  { en: 'Superhero', nb: 'Superhelt' },
-  { en: 'Wizard', nb: 'Trollmann' },
-  { en: 'Octopus', nb: 'Blekksprut' },
-  { en: 'Pilot', nb: 'Pilot' },
-  { en: 'Troll', nb: 'Troll' },
-  { en: 'Cowboy', nb: 'Cowboy' },
-  { en: 'Tooth fairy', nb: 'Tannfeen' },
-  { en: 'Detective', nb: 'Detektiv' },
-  { en: 'Banana', nb: 'Banan' },
-  { en: 'Polar bear', nb: 'Isbjørn' },
-  { en: 'Ninja', nb: 'Ninja' },
-  { en: 'Bus driver', nb: 'Bussjåfør' },
-  { en: 'Unicorn', nb: 'Enhjørning' },
-  { en: 'Zombie', nb: 'Zombie' },
-  { en: 'Hairdresser', nb: 'Frisør' },
-  { en: 'Shark', nb: 'Hai' },
-  { en: 'King', nb: 'Konge' },
-  { en: 'Waiter', nb: 'Servitør' },
-  { en: 'Owl', nb: 'Ugle' },
-  { en: 'Clown', nb: 'Klovn' },
-  { en: 'Lifeguard', nb: 'Livvakt på stranda' },
-  { en: 'Alien', nb: 'Romvesen' },
-  { en: 'Bee', nb: 'Bie' },
-  { en: 'Surfer', nb: 'Surfer' },
-  { en: 'Knight', nb: 'Ridder' },
-  { en: 'Gnome', nb: 'Nisse' },
-  { en: 'Pizza', nb: 'Pizza' },
-  { en: 'Elephant', nb: 'Elefant' },
-  { en: 'DJ', nb: 'DJ' },
+// Pick a category first. Each player has one 60-second turn; hard words score 2.
+const x = (en: string, nb: string): Text => ({ en, nb });
+const hard = (en: string, nb: string): Word => ({ en, nb, hard: true });
+
+const PACKS: WordPack[] = [
+  {
+    name: x('Animals', 'Dyr'),
+    hint: x('From moose to platypus', 'Fra elg til nebbdyr'),
+    words: [
+      x('Penguin', 'Pingvin'),
+      x('Giraffe', 'Sjiraff'),
+      x('Moose', 'Elg'),
+      x('Kangaroo', 'Kenguru'),
+      x('Octopus', 'Blekksprut'),
+      x('Polar bear', 'Isbjørn'),
+      x('Shark', 'Hai'),
+      x('Owl', 'Ugle'),
+      x('Bee', 'Bie'),
+      x('Elephant', 'Elefant'),
+      x('Hedgehog', 'Pinnsvin'),
+      x('Seagull', 'Måke'),
+      hard('Platypus', 'Nebbdyr'),
+      hard('Chameleon', 'Kameleon'),
+      hard('Sloth', 'Dovendyr'),
+      hard('Flamingo', 'Flamingo'),
+      hard('Jellyfish', 'Manet'),
+      hard('Woodpecker', 'Hakkespett'),
+    ],
+  },
+  {
+    name: x('People & jobs', 'Folk og yrker'),
+    hint: x('Who does what', 'Hvem gjør hva'),
+    words: [
+      x('Astronaut', 'Astronaut'),
+      x('Pirate', 'Pirat'),
+      x('Dentist', 'Tannlege'),
+      x('Firefighter', 'Brannkonstabel'),
+      x('Chef', 'Kokk'),
+      x('Teacher', 'Lærer'),
+      x('Pilot', 'Pilot'),
+      x('Detective', 'Detektiv'),
+      x('Hairdresser', 'Frisør'),
+      x('Bus driver', 'Bussjåfør'),
+      x('DJ', 'DJ'),
+      x('Waiter', 'Servitør'),
+      hard('Beekeeper', 'Birøkter'),
+      hard('Weather presenter', 'Værmelder'),
+      hard('Lighthouse keeper', 'Fyrvokter'),
+      hard('Stunt double', 'Stuntmann'),
+      hard('Sommelier', 'Sommelier'),
+      hard('Referee', 'Dommer'),
+    ],
+  },
+  {
+    name: x('Fantasy', 'Fantasi'),
+    hint: x('Myths, monsters and legends', 'Myter, monstre og sagn'),
+    words: [
+      x('Vampire', 'Vampyr'),
+      x('Dragon', 'Drage'),
+      x('Mermaid', 'Havfrue'),
+      x('Ghost', 'Spøkelse'),
+      x('Wizard', 'Trollmann'),
+      x('Troll', 'Troll'),
+      x('Unicorn', 'Enhjørning'),
+      x('Zombie', 'Zombie'),
+      x('Santa Claus', 'Julenissen'),
+      x('Superhero', 'Superhelt'),
+      x('Alien', 'Romvesen'),
+      x('Knight', 'Ridder'),
+      hard('Tooth fairy', 'Tannfeen'),
+      hard('Werewolf', 'Varulv'),
+      hard('Genie', 'Ånden i lampen'),
+      hard('Cyclops', 'Kyklop'),
+      hard('Phoenix', 'Fugl Føniks'),
+      hard('Huldra', 'Huldra'),
+    ],
+  },
+  {
+    name: x('Things & food', 'Ting og mat'),
+    hint: x('Everyday things and things you eat', 'Hverdagsting og mat'),
+    words: [
+      x('Pizza', 'Pizza'),
+      x('Banana', 'Banan'),
+      x('Umbrella', 'Paraply'),
+      x('Toothbrush', 'Tannbørste'),
+      x('Snowman', 'Snømann'),
+      x('Lighthouse', 'Fyrtårn'),
+      x('Popcorn', 'Popkorn'),
+      x('Bicycle', 'Sykkel'),
+      x('Sunglasses', 'Solbriller'),
+      x('Taco', 'Taco'),
+      x('Rubber duck', 'Badeand'),
+      x('Guitar', 'Gitar'),
+      hard('Brown cheese', 'Brunost'),
+      hard('Disco ball', 'Diskokule'),
+      hard('Fire extinguisher', 'Brannslukker'),
+      hard('Lava lamp', 'Lavalampe'),
+      hard('Waffle iron', 'Vaffeljern'),
+      hard('Hourglass', 'Timeglass'),
+    ],
+  },
 ];
 
-type State = {
-  lang: Lang;
-  players: PlayerHandle[];
-  current: number;
-  /** Players who have had their turn. */
-  turns: number;
-  order: number[];
-  at: number;
-  playing: boolean;
-  turnScore: number;
-  scores: Record<PlayerHandle, number>;
-};
-
-const guesser = (state: State) => state.players[state.current % state.players.length];
-function nextWord(state: State) {
-  state.at = (state.at + 1) % state.order.length;
-}
-
 export const game = defineGame({
-  setup: ({ players, locale, random }): State => ({
-    lang: langOf(locale),
-    players: [...players],
-    current: 0,
-    turns: 0,
-    order: shuffled(WORDS.length, random),
-    at: 0,
-    playing: false,
-    turnScore: 0,
-    scores: zeroScores(players),
-  }),
+  setup: ({ players, locale }) => timedSetup(players, locale),
   actions: (action) => ({
-    start: action((state) => {
-      if (state.playing) invalid('The turn has started.');
-      state.playing = true;
-      state.turnScore = 0;
+    pick: action({
+      payload: option(PACKS.length),
+      run: (state, { payload, random }) => pickPack(state, PACKS, payload.value, random),
     }),
-    correct: action((state) => {
-      if (!state.playing) invalid('Start the turn first.');
-      score(state.scores, guesser(state));
-      state.turnScore += 1;
-      nextWord(state);
-    }),
-    pass: action((state) => {
-      if (!state.playing) invalid('Start the turn first.');
-      nextWord(state);
-    }),
-    timeUp: action((state) => {
-      if (!state.playing) invalid('Start the turn first.');
-      state.playing = false;
-      nextWord(state);
-      state.turns += 1;
-      if (state.turns >= state.players.length) {
-        endGame({ scores: state.scores });
-        return;
-      }
-      state.current = (state.current + 1) % state.players.length;
-    }),
+    start: action((state) => start(state)),
+    correct: action((state) => settleWord(state, PACKS, true)),
+    pass: action((state) => settleWord(state, PACKS, false)),
+    timeUp: action((state) => timeUp(state)),
   }),
-  playerLeft: (state, { playerId }) => {
-    const index = state.players.indexOf(playerId);
-    state.players = state.players.filter((p) => p !== playerId);
-    if (index < state.current) state.current -= 1;
-    if (state.current >= state.players.length) state.current = 0;
-  },
-  view: (state) => ({
-    guesser: guesser(state),
-    playing: state.playing,
-    word: state.playing ? WORDS[state.order[state.at]][state.lang] : null,
-    turn: state.turns + 1,
-    turns: state.players.length,
-    turnScore: state.turnScore,
-    scores: state.scores,
-  }),
+  playerLeft: (state, { playerId }) => leave(state, playerId),
+  // On one shared phone, the screen shows the word to everyone but the guesser.
+  view: (state) => timedView(state, PACKS, true),
 });
