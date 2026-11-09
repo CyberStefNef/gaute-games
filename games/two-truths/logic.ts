@@ -6,7 +6,7 @@ import {
   type Json,
   type PlayerHandle,
 } from '@gaute/games-sdk/logic';
-import { option, score, zeroScores } from '../_kit/rules';
+import { awards, count, option, score, zeroScores } from '../_kit/rules';
 
 // Each player in turn writes two true statements and one lie. The others guess
 // the lie: a right guess scores for the guesser, a wrong one for the teller.
@@ -19,6 +19,8 @@ type State = {
   lie: number;
   guesses: Record<PlayerHandle, number>;
   scores: Record<PlayerHandle, number>;
+  fooled: Record<PlayerHandle, number>;
+  detected: Record<PlayerHandle, number>;
 };
 
 const story = (payload: Json): { statements: string[]; lie: number } => {
@@ -40,19 +42,25 @@ const guessers = (state: State) => state.players.filter((p) => p !== teller(stat
 function reveal(state: State) {
   state.phase = 'reveal';
   for (const [player, guess] of Object.entries(state.guesses))
-    if (guess === state.lie) score(state.scores, player);
-    else score(state.scores, teller(state));
+    if (guess === state.lie) {
+      score(state.scores, player);
+      count(state.detected, player);
+    } else {
+      score(state.scores, teller(state));
+      count(state.fooled, teller(state));
+    }
 }
 
 function nextTeller(state: State) {
-  state.phase = 'write';
-  state.statements = [];
-  state.lie = 0;
-  state.guesses = {};
+  // After the last teller the game ends on the final reveal.
   if (state.turn + 1 >= state.players.length) {
     endGame({ scores: state.scores });
     return;
   }
+  state.phase = 'write';
+  state.statements = [];
+  state.lie = 0;
+  state.guesses = {};
   state.turn += 1;
 }
 
@@ -65,6 +73,8 @@ export const game = defineGame({
     lie: 0,
     guesses: {},
     scores: zeroScores(players),
+    fooled: {},
+    detected: {},
   }),
   actions: (action) => ({
     submit: action({
@@ -127,6 +137,13 @@ export const game = defineGame({
       guessers: guessers(state).length,
       guesses: state.phase === 'reveal' ? state.guesses : ({} as Record<PlayerHandle, number>),
       scores: state.scores,
+      awards: awards(
+        [
+          { title: 'masterLiar', stat: state.fooled, least: 2 },
+          { title: 'lieDetector', stat: state.detected, least: 2 },
+        ],
+        state.players,
+      ),
     };
   },
 });
