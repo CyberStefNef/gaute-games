@@ -20,7 +20,7 @@ export type Player = {
   left: boolean;
   you: boolean;
 };
-export type Snapshot = {
+export type Snapshot<View = Json> = {
   mode: Mode;
   status: 'playing' | 'ended';
   version: number;
@@ -28,7 +28,7 @@ export type Snapshot = {
   you: PlayerHandle | null;
   players: Player[];
   /** The view for `you`, exactly as the game's `view` returned it. */
-  view: Json;
+  view: View;
   result: Json;
   endedReason: string | null;
 };

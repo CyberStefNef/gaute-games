@@ -65,6 +65,16 @@ export const RUNTIME_PRELUDE = `"use strict";
       throw new Error(what + ' must not be async');
     return value;
   };
+  // An action's payload comes from a player's page: its validator (a function or a
+  // Standard Schema) runs first, and a rejection rejects the action.
+  const check = (validator, value) => {
+    if (typeof validator === 'function') return sync(validator(value), 'A payload validator');
+    const standard = validator && validator['~standard'];
+    if (!standard || typeof standard.validate !== 'function') throw new Error('payload must be a function or a Standard Schema');
+    const result = sync(standard.validate(value), 'A payload schema');
+    if (result.issues) throw new Invalid(String((result.issues[0] && result.issues[0].message) || 'Invalid action'));
+    return result.value;
+  };
   globalThis.__dispatch = (json) => {
     const r = JSON.parse(json);
     if (!game || typeof game.setup !== 'function' || typeof game.view !== 'function' || !game.actions)
@@ -80,9 +90,12 @@ export const RUNTIME_PRELUDE = `"use strict";
           if (typeof game.playerLeft !== 'function') return JSON.stringify({ ok: true, unsupported: true });
           sync(game.playerLeft(state, { playerId: r.playerId, players: r.players, random }), 'playerLeft');
         } else {
-          if (!Object.prototype.hasOwnProperty.call(game.actions, r.action) || typeof game.actions[r.action] !== 'function')
-            throw new Invalid('Unknown action');
-          sync(game.actions[r.action](state, { playerId: r.playerId, payload: r.payload, players: r.players, random }), 'Action ' + r.action);
+          const entry = Object.prototype.hasOwnProperty.call(game.actions, r.action) ? game.actions[r.action] : undefined;
+          // defineGame makes { payload?, run } entries; a bare function receives the raw payload.
+          const run = typeof entry === 'function' ? entry : entry && typeof entry.run === 'function' ? entry.run : undefined;
+          if (!run) throw new Invalid('Unknown action');
+          const payload = typeof entry === 'function' ? r.payload : entry.payload ? check(entry.payload, r.payload) : null;
+          sync(run(state, { playerId: r.playerId, payload, players: r.players, random }), 'Action ' + r.action);
         }
       }
       const stateJson = JSON.stringify(state);

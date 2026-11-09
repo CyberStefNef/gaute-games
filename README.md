@@ -18,9 +18,10 @@ Each game declares the ways it can be played:
 
 A game is a small web app in two parts. **Rules** (`logic.ts`) decide what happens
 and what each player may see; Gaute runs them in a sandbox. **The screen**
-(`client.ts`) is an ordinary web page: use plain DOM, React, Svelte, canvas or
-anything else. Gaute shows it inside the app, styled with the app's own theme and
-fonts, with no network access.
+(`client.tsx`) is an ordinary web page. The template uses React and Tailwind CSS,
+whose `bg-primary`, `text-muted-foreground` and other colours follow the app's
+theme in light and dark mode; plain DOM, Svelte, canvas or anything else works
+too. Gaute shows it inside the app with the app's fonts and no network access.
 
 ## Make a game
 
@@ -47,7 +48,7 @@ merge, it is signed and published, and Gaute picks it up within minutes. See
 
 | Path         | What                                                          |
 | ------------ | ------------------------------------------------------------- |
-| `sdk/`       | `@gaute/games-sdk`: rules API, page client, protocol, runtime |
+| `sdk/`       | `@gaute/games-sdk`: rules, page client, React, Tailwind theme |
 | `games/`     | Published games (official ones included); `_kit` is shared UI |
 | `template/`  | Starting point for `npm run new`                              |
 | `tests/`     | Checks every game must pass                                   |

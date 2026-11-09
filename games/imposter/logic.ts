@@ -1,4 +1,11 @@
-import { defineGame, invalid, type Mode, type PlayerHandle } from '@gaute/games-sdk/logic';
+import {
+  defineGame,
+  fields,
+  invalid,
+  type Json,
+  type Mode,
+  type PlayerHandle,
+} from '@gaute/games-sdk/logic';
 
 // Everyone except the imposter sees the secret word. Players give spoken clues,
 // then vote. The group wins a round when the most votes land on the imposter.
@@ -60,11 +67,15 @@ type State = {
   outcome: { caught: boolean; tally: Record<PlayerHandle, number> } | null;
 };
 
-const target = (state: State, payload: unknown) => {
-  const value = (payload as { target?: unknown } | null)?.target;
-  if (typeof value !== 'string' || !state.players.includes(value))
-    invalid('Choose a player in this game.');
-  return value as PlayerHandle;
+/** Payload of `vote` and `accuse`: the chosen player. */
+const choice = (payload: Json): { target: PlayerHandle } => {
+  const { target } = fields(payload);
+  if (typeof target !== 'string') invalid('Choose a player in this game.');
+  return { target };
+};
+const inGame = (state: State, target: PlayerHandle) => {
+  if (!state.players.includes(target)) invalid('Choose a player in this game.');
+  return target;
 };
 
 function deal(state: State, random: () => number) {
@@ -99,7 +110,7 @@ function countVotes(state: State) {
   reveal(state, tally);
 }
 
-defineGame({
+export const game = defineGame({
   setup: ({ players, locale, mode, random }) => {
     const state: State = {
       mode,
@@ -118,45 +129,51 @@ defineGame({
     deal(state, random);
     return state;
   },
-  actions: {
+  actions: (action) => ({
     // Pass-the-phone: the holder has read their role and passes the phone on.
-    seen: (state: State, { playerId }) => {
+    seen: action((state, { playerId }) => {
       const next = state.players.find((handle) => !state.seen.includes(handle));
       if (state.phase !== 'roles' || playerId !== next) invalid('It is not your turn.');
       state.seen.push(next!);
       if (state.seen.length === state.players.length) state.phase = 'clues';
-    },
-    startVote: (state: State) => {
+    }),
+    startVote: action((state) => {
       if (state.phase !== 'clues') invalid('Voting has already started.');
       state.phase = 'vote';
-    },
-    vote: (state: State, { playerId, payload }) => {
-      if (state.phase !== 'vote' || !playerId) invalid('Voting is not open.');
-      const voted = target(state, payload);
-      if (voted === playerId) invalid('Vote for someone else.');
-      state.votes[playerId!] = voted;
-      if (state.players.every((handle) => state.votes[handle])) countVotes(state);
-    },
+    }),
+    vote: action({
+      payload: choice,
+      run: (state, { playerId, payload }) => {
+        if (state.phase !== 'vote' || !playerId) invalid('Voting is not open.');
+        const voted = inGame(state, payload.target);
+        if (voted === playerId) invalid('Vote for someone else.');
+        state.votes[playerId] = voted;
+        if (state.players.every((handle) => state.votes[handle])) countVotes(state);
+      },
+    }),
     // One phone: the group agrees out loud and accuses one player together.
-    accuse: (state: State, { payload }) => {
-      if (state.phase !== 'vote' || state.mode === 'phones') invalid('Voting is not open.');
-      reveal(state, { [target(state, payload)]: state.players.length });
-    },
-    reveal: (state: State) => {
+    accuse: action({
+      payload: choice,
+      run: (state, { payload }) => {
+        if (state.phase !== 'vote' || state.mode === 'phones') invalid('Voting is not open.');
+        reveal(state, { [inGame(state, payload.target)]: state.players.length });
+      },
+    }),
+    reveal: action((state) => {
       if (state.phase !== 'vote') invalid('Voting is not open.');
       if (!Object.keys(state.votes).length) invalid('Nobody has voted yet.');
       countVotes(state);
-    },
-    nextRound: (state: State, { random }) => {
+    }),
+    nextRound: action((state, { random }) => {
       if (state.phase !== 'reveal') invalid('Finish this round first.');
       deal(state, random);
-    },
-  },
-  turn: (state: State) =>
+    }),
+  }),
+  turn: (state) =>
     state.phase === 'roles'
       ? (state.players.find((handle) => !state.seen.includes(handle)) ?? null)
       : null,
-  playerLeft: (state: State, { playerId, random }) => {
+  playerLeft: (state, { playerId, random }) => {
     state.players = state.players.filter((handle) => handle !== playerId);
     delete state.votes[playerId];
     for (const [voter, voted] of Object.entries(state.votes))
@@ -165,7 +182,7 @@ defineGame({
     else if (state.phase === 'vote' && state.players.every((handle) => state.votes[handle]))
       countVotes(state);
   },
-  view: (state: State, playerId) => {
+  view: (state, playerId) => {
     // The shared screen never shows a role or the word before the reveal.
     const isImposter = playerId !== null && playerId === state.imposter;
     const revealed = state.phase === 'reveal';
@@ -173,7 +190,7 @@ defineGame({
       mode: state.mode,
       round: state.round,
       phase: state.phase,
-      role: playerId === null ? null : isImposter ? 'imposter' : 'crew',
+      role: playerId === null ? null : isImposter ? ('imposter' as const) : ('crew' as const),
       word: revealed || (playerId !== null && !isImposter) ? state.word : null,
       voted: Object.keys(state.votes).length,
       yourVote: playerId === null ? null : (state.votes[playerId] ?? null),

@@ -1,9 +1,10 @@
 // Finds, validates and bundles the games in games/. Used by the Vite plugin
 // (simulator and catalogue), the tests and the CI publish step.
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import tailwindcss from '@tailwindcss/vite';
 import { build } from 'vite-plus';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -65,11 +66,22 @@ export function readManifest(slug, dir = path.join(ROOT, 'games', slug)) {
   };
 }
 
-async function bundle(dir, entry) {
+/** The first of `names` (such as client.tsx or client.ts) that exists in `dir`. */
+function entry(dir, names) {
+  const name = names.find((candidate) => existsSync(path.join(dir, candidate)));
+  if (!name) throw Error(`${path.relative(ROOT, dir)}: add ${names.join(' or ')}`);
+  return name;
+}
+
+async function bundle(dir, entry, { page = false } = {}) {
   const result = await build({
-    root: ROOT,
+    // Rooted in the game's folder, so Tailwind generates only the classes it uses.
+    root: page ? dir : ROOT,
     configFile: false,
     logLevel: 'silent',
+    // Game pages may use Tailwind CSS (`@import 'tailwindcss'`) and React.
+    plugins: page ? [tailwindcss()] : [],
+    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
     build: {
       write: false,
       minify: true,
@@ -94,10 +106,11 @@ async function bundle(dir, entry) {
 }
 
 /** Builds one game: logic for the sandbox, client page script and style, and a version hash. */
-export async function bundleGame(slug, dir = path.join(ROOT, 'games', slug)) {
+export async function bundleGame(slug, folder = path.join(ROOT, 'games', slug)) {
+  const dir = path.resolve(folder);
   const manifest = readManifest(slug, dir);
-  const logic = (await bundle(dir, 'logic.ts')).script;
-  const client = await bundle(dir, 'client.ts');
+  const logic = (await bundle(dir, entry(dir, ['logic.ts']))).script;
+  const client = await bundle(dir, entry(dir, ['client.tsx', 'client.ts']), { page: true });
   if (Buffer.byteLength(logic) > LIMITS.logic)
     throw Error(`games/${slug}: logic is larger than ${LIMITS.logic / 1024} KB`);
   if (Buffer.byteLength(client.script + client.style) > LIMITS.client)

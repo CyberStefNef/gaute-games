@@ -68,3 +68,45 @@ test('async rules are rejected instead of silently losing their changes', async 
     }),
   ).rejects.toThrow(/must not be async/);
 });
+
+const PRELUDE_GAME = (actions: string) =>
+  `__gaute.defineGame({ setup: () => ({ log: [] }), actions: { ${actions} }, view: (s) => s });`;
+const request = (action: string, payload: unknown) => ({
+  op: 'action' as const,
+  mode: 'phones' as const,
+  state: JSON.stringify({ log: [] }),
+  players: ['p1', 'p2'],
+  playerId: 'p1',
+  action,
+  payload,
+  seed: 1,
+});
+const logged = (outcome: Awaited<ReturnType<typeof runGame>>) =>
+  outcome.ok && 'state' in outcome
+    ? (JSON.parse(outcome.state) as { log: unknown[] }).log
+    : outcome;
+
+test('payload validators run before the action, and actions without one get null', async () => {
+  const logic = PRELUDE_GAME(`
+    pick: { payload: (p) => { if (!p || typeof p.target !== 'string') __gaute.invalid('Choose a player.'); return { target: p.target }; },
+            run: (s, { payload }) => { s.log.push(payload); } },
+    plain: { run: (s, { payload }) => { s.log.push(payload); } },
+    legacy: (s, { payload }) => { s.log.push(payload); },
+    schema: { payload: { '~standard': { version: 1, vendor: 'test', validate: (v) => typeof v === 'number' ? { value: v * 2 } : { issues: [{ message: 'A number, please.' }] } } },
+              run: (s, { payload }) => { s.log.push(payload); } },
+  `);
+  expect(logged(await runGame(logic, request('pick', { target: 'p2', extra: 1 })))).toEqual([
+    { target: 'p2' },
+  ]);
+  expect(await runGame(logic, request('pick', { target: 2 }))).toEqual({
+    ok: false,
+    reason: 'Choose a player.',
+  });
+  expect(logged(await runGame(logic, request('plain', { anything: true })))).toEqual([null]);
+  expect(logged(await runGame(logic, request('legacy', { raw: 1 })))).toEqual([{ raw: 1 }]);
+  expect(logged(await runGame(logic, request('schema', 21)))).toEqual([42]);
+  expect(await runGame(logic, request('schema', 'x'))).toEqual({
+    ok: false,
+    reason: 'A number, please.',
+  });
+});
