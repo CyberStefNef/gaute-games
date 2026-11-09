@@ -1,16 +1,11 @@
-import { mountGame, useGame, useStrings } from '@gaute/games-sdk/react';
+import type { ViewOf } from '@gaute/games-sdk/logic';
+import { gameClient, useStrings } from '@gaute/games-sdk/react';
+import type { game } from './logic';
 import { Big, Button, Card, Label, Muted, Page, PlayerChoice, Tally } from '../_kit/ui';
 import '../_kit/style.css';
 
-type Refs = Record<string, string>;
-type View = {
-  drawn: number;
-  remaining: number;
-  finished: boolean;
-  card: { kind: 'prompt' | 'duel' | 'vote' | 'rule'; ending: boolean; text: string; refs: Refs };
-  vote: { voted: number; yourVote: string | null; tally: Record<string, number> | null } | null;
-  rules: { text: string; refs: Refs }[];
-};
+const { mountGame, useGame } = gameClient<typeof game>();
+type Refs = ViewOf<typeof game>['card']['refs'];
 
 const en = {
   prompt: 'Prompt',
@@ -29,8 +24,8 @@ const en = {
   'The deck is finished.': 'The deck is finished.',
   'Choose a player in this game.': 'Choose a player in this game.',
   'On three, everyone points at their pick.': 'On three, everyone points at their pick.',
-};
-const nb: typeof en = {
+} as const;
+const nb: Record<keyof typeof en, string> = {
   prompt: 'Spørsmål',
   duel: 'Duell',
   vote: 'Avstemning',
@@ -65,13 +60,13 @@ function CardText({ text, refs }: { text: string; refs: Refs }) {
 }
 
 function Game() {
-  const { view, players, act, playing } = useGame<View>();
+  const { view, players, act, playing } = useGame();
   const t = useStrings({ en, nb });
   const live = playing && !view.finished;
   const present = players.filter((player) => !player.left).map((player) => player.handle);
   const vote = view.vote;
   return (
-    <Page t={t}>
+    <Page translate={t.text}>
       <Card>
         <Label>{t(view.card.ending ? 'ending' : view.card.kind)}</Label>
         <Big>

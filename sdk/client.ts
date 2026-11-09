@@ -1,7 +1,7 @@
 // Game page side of the bridge. A game's client bundle calls `connect` once and
 // renders whatever state arrives. The page has no network access: everything it
 // knows comes from the Gaute app through these messages.
-import type { Json } from './logic';
+import type { ActionName, AnyGameRules, Json, PayloadOf, ViewOf } from './logic';
 import {
   PROTOCOL,
   parseHostMessage,
@@ -13,8 +13,14 @@ import {
 } from './protocol';
 
 export type { Haptic, Player, Snapshot, Theme } from './protocol';
-export type GameState = { snapshot: Snapshot; locale: string; theme: Theme };
+export type GameState<View = Json> = { snapshot: Snapshot<View>; locale: string; theme: Theme };
 export type ActResult = { ok: true } | { ok: false; reason: string };
+/** The arguments after an action's name: its payload, or nothing for an action without one. */
+export type PayloadArgs<Rules, Name extends ActionName<Rules>> = [PayloadOf<Rules, Name>] extends [
+  null,
+]
+  ? []
+  : [payload: PayloadOf<Rules, Name>];
 
 type NativeBridge = { postMessage(data: string): void };
 const nativeBridge = () => (globalThis as { ReactNativeWebView?: NativeBridge }).ReactNativeWebView;
@@ -25,9 +31,15 @@ function send(message: GameMessage) {
   else window.parent.postMessage(message, '*');
 }
 
-/** Starts listening to the app. `onState` runs for the first state and every change. */
-export function connect(onState: (state: GameState) => void) {
-  let state: GameState | undefined;
+/**
+ * Starts listening to the app. `onState` runs for the first state and every
+ * change. Pass the rules' type for typed views and actions:
+ * `connect<typeof game>(…)` with `import type { game } from './logic'`.
+ */
+export function connect<Rules extends AnyGameRules = AnyGameRules>(
+  onState: (state: GameState<ViewOf<Rules>>) => void,
+) {
+  let state: GameState<ViewOf<Rules>> | undefined;
   let next = 1;
   const pending = new Map<number, (result: ActResult) => void>();
   window.addEventListener('message', (event) => {
@@ -42,10 +54,16 @@ export function connect(onState: (state: GameState) => void) {
       pending.delete(message.id);
       return;
     }
+    // The view is what this game's rules returned; the app passes it through as is.
     if (message.type === 'init')
-      state = { snapshot: message.snapshot, locale: message.locale, theme: message.theme };
+      state = {
+        snapshot: message.snapshot as Snapshot<ViewOf<Rules>>,
+        locale: message.locale,
+        theme: message.theme,
+      };
     else if (!state) return;
-    else if (message.type === 'update') state = { ...state, snapshot: message.snapshot };
+    else if (message.type === 'update')
+      state = { ...state, snapshot: message.snapshot as Snapshot<ViewOf<Rules>> };
     else state = { ...state, theme: message.theme };
     applyTheme(state.theme);
     onState(state);
@@ -54,12 +72,15 @@ export function connect(onState: (state: GameState) => void) {
   });
   send({ gaute: PROTOCOL, type: 'ready' });
   return {
-    /** Sends an action to the game's server logic. Resolves when it is applied or rejected. */
-    act(action: string, payload: Json = null): Promise<ActResult> {
+    /** Sends an action to the game's rules. Resolves when it is applied or rejected. */
+    act<Name extends ActionName<Rules>>(
+      action: Name,
+      ...[payload]: PayloadArgs<Rules, Name>
+    ): Promise<ActResult> {
       const id = next++;
       return new Promise((resolve) => {
         pending.set(id, resolve);
-        send({ gaute: PROTOCOL, type: 'act', id, action, payload });
+        send({ gaute: PROTOCOL, type: 'act', id, action, payload: (payload ?? null) as Json });
       });
     },
     /** Asks the app for haptic feedback (phones only; ignored on the web). */

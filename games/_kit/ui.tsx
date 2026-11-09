@@ -1,17 +1,28 @@
 // Small building blocks shared by the official games, styled with the app's
 // theme through Tailwind. Creators are free to use anything else.
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { useGame } from '@gaute/games-sdk/react';
+import type { AnyGameRules } from '@gaute/games-sdk/logic';
+import { gameClient } from '@gaute/games-sdk/react';
+
+// These parts work in any game, so they only use what every game has.
+const { useGame } = gameClient<AnyGameRules>();
 
 /** The page, with the reason the last action was rejected underneath. */
-export function Page({ children, t }: { children: ReactNode; t: (key: string) => string }) {
+export function Page({
+  children,
+  translate,
+}: {
+  children: ReactNode;
+  /** Translates the rules' rejection reasons: pass `t.text` from `useStrings`. */
+  translate: (text: string) => string;
+}) {
   const { rejected } = useGame();
   return (
     <main className="mx-auto flex max-w-[560px] flex-col gap-4 p-4 text-base leading-snug">
       {children}
       {rejected ? (
         <p role="alert" className="font-semibold text-destructive">
-          {t(rejected)}
+          {translate(rejected)}
         </p>
       ) : null}
     </main>

@@ -1,18 +1,11 @@
-import { mountGame, useGame, useStrings } from '@gaute/games-sdk/react';
+import type { ViewOf } from '@gaute/games-sdk/logic';
+import { gameClient, useStrings, type Translate } from '@gaute/games-sdk/react';
+import type { game } from './logic';
 import { Big, Button, Card, Label, Muted, Page, PlayerChoice, Tally } from '../_kit/ui';
 import '../_kit/style.css';
 
-type View = {
-  mode: 'phones' | 'pass' | 'shared';
-  round: number;
-  phase: 'roles' | 'clues' | 'vote' | 'reveal';
-  role: 'imposter' | 'crew' | null;
-  word: string | null;
-  voted: number;
-  yourVote: string | null;
-  scores: Record<string, number>;
-  reveal: { imposter: string; caught: boolean; tally: Record<string, number> } | null;
-};
+const { mountGame, useGame } = gameClient<typeof game>();
+type View = ViewOf<typeof game>;
 
 const en = {
   'Round {n}': 'Round {n}',
@@ -43,8 +36,8 @@ const en = {
   'Agree out loud, then choose one player.': 'Agree out loud, then choose one player.',
   'It is not your turn.': 'It is not your turn.',
   'Choose a player in this game.': 'Choose a player in this game.',
-};
-const nb: typeof en = {
+} as const;
+const nb: Record<keyof typeof en, string> = {
   'Round {n}': 'Runde {n}',
   'The secret word': 'Det hemmelige ordet',
   'You are the imposter': 'Du er imposteren',
@@ -75,7 +68,7 @@ const nb: typeof en = {
   'Choose a player in this game.': 'Velg en spiller i dette spillet.',
 };
 
-type T = ReturnType<typeof useStrings<keyof typeof en>>;
+type T = Translate<typeof en>;
 
 function Scores({ view, t }: { view: View; t: T }) {
   const { name, playing } = useGame();
@@ -115,13 +108,13 @@ function Role({ view, t }: { view: View; t: T }) {
 }
 
 function Game() {
-  const { view, you, players, name, act, playing } = useGame<View>();
+  const { view, you, players, name, act, playing } = useGame();
   const t = useStrings({ en, nb });
   const present = players.filter((player) => !player.left).map((player) => player.handle);
   // Passing the phone: the holder reads their role privately, then passes it on.
   if (view.phase === 'roles')
     return (
-      <Page t={t}>
+      <Page translate={t.text}>
         <Role view={view} t={t} />
         {playing ? (
           <Button primary onClick={() => act('seen')}>
@@ -132,7 +125,7 @@ function Game() {
     );
   if (view.phase === 'clues')
     return (
-      <Page t={t}>
+      <Page translate={t.text}>
         <Role view={view} t={t} />
         <Muted>{t('Take turns giving a one-word clue out loud. Do not say the word.')}</Muted>
         {playing ? (
@@ -145,7 +138,7 @@ function Game() {
     );
   if (view.phase === 'vote' && view.mode !== 'phones')
     return (
-      <Page t={t}>
+      <Page translate={t.text}>
         <Role view={view} t={t} />
         <Card>
           <Label>{t('Who does the group accuse?')}</Label>
@@ -160,7 +153,7 @@ function Game() {
     );
   if (view.phase === 'vote')
     return (
-      <Page t={t}>
+      <Page translate={t.text}>
         <Role view={view} t={t} />
         <Card>
           <Label>{t('Who is the imposter?')}</Label>
@@ -180,7 +173,7 @@ function Game() {
     );
   const reveal = view.reveal!;
   return (
-    <Page t={t}>
+    <Page translate={t.text}>
       <Card>
         <Big>{reveal.caught ? t('Caught!') : t('The imposter got away')}</Big>
         <p>{t('The imposter was {name}.', { name: name(reveal.imposter) })}</p>

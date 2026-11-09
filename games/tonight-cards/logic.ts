@@ -1,4 +1,12 @@
-import { defineGame, endGame, invalid, type Mode, type PlayerHandle } from '@gaute/games-sdk/logic';
+import {
+  defineGame,
+  endGame,
+  fields,
+  invalid,
+  type Json,
+  type Mode,
+  type PlayerHandle,
+} from '@gaute/games-sdk/logic';
 
 // A shared deck of prompts, duels, votes and rules that last a few cards.
 // Placeholders ({p1}, {p2}) name players; the app fills in display names. On a
@@ -208,7 +216,14 @@ function draw(state: State, random: () => number) {
 const isVote = (state: State) =>
   state.mode === 'phones' && CARDS[state.shown.card].kind === 'vote' && !state.shown.ending;
 
-defineGame({
+/** Payload of `vote`: the chosen player. */
+const choice = (payload: Json): { target: PlayerHandle } => {
+  const { target } = fields(payload);
+  if (typeof target !== 'string') invalid('Choose a player in this game.');
+  return { target };
+};
+
+export const game = defineGame({
   setup: ({ players, locale, mode, random }) => {
     const order = CARDS.map((_, i) => i);
     for (let i = order.length - 1; i > 0; i--) {
@@ -229,26 +244,27 @@ defineGame({
     draw(state, random);
     return state;
   },
-  actions: {
+  actions: (action) => ({
     // A vote with answers is revealed first; the next tap moves on.
-    next: (state: State, { random }) => {
+    next: action((state, { random }) => {
       if (state.finished) invalid('The deck is finished.');
       if (isVote(state) && !state.shown.revealed && Object.keys(state.shown.votes).length) {
         state.shown.revealed = true;
         return;
       }
       draw(state, random);
-    },
-    vote: (state: State, { playerId, payload }) => {
-      if (!isVote(state) || state.shown.revealed || !playerId) invalid('There is no open vote.');
-      const target = (payload as { target?: unknown } | null)?.target;
-      if (typeof target !== 'string' || !state.players.includes(target))
-        invalid('Choose a player in this game.');
-      state.shown.votes[playerId!] = target as PlayerHandle;
-      if (state.players.every((handle) => state.shown.votes[handle])) state.shown.revealed = true;
-    },
-  },
-  playerLeft: (state: State, { playerId }) => {
+    }),
+    vote: action({
+      payload: choice,
+      run: (state, { playerId, payload }) => {
+        if (!isVote(state) || state.shown.revealed || !playerId) invalid('There is no open vote.');
+        if (!state.players.includes(payload.target)) invalid('Choose a player in this game.');
+        state.shown.votes[playerId] = payload.target;
+        if (state.players.every((handle) => state.shown.votes[handle])) state.shown.revealed = true;
+      },
+    }),
+  }),
+  playerLeft: (state, { playerId }) => {
     state.players = state.players.filter((handle) => handle !== playerId);
     state.rules = state.rules.filter((rule) => !Object.values(rule.refs).includes(playerId));
     delete state.shown.votes[playerId];
@@ -257,7 +273,7 @@ defineGame({
     if (isVote(state) && state.players.every((handle) => state.shown.votes[handle]))
       state.shown.revealed = true;
   },
-  view: (state: State, playerId) => {
+  view: (state, playerId) => {
     const card = CARDS[state.shown.card];
     const tally: Record<PlayerHandle, number> = {};
     for (const target of Object.values(state.shown.votes)) tally[target] = (tally[target] ?? 0) + 1;

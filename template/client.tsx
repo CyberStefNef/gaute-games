@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { mountGame, useGame, useStrings } from '@gaute/games-sdk/react';
-import type { View } from './logic';
+import { gameClient, useStrings } from '@gaute/games-sdk/react';
+import type { game } from './logic';
 import './style.css';
+
+// Hooks typed by the rules: `view` is what `view` returns, and `act` accepts only
+// the game's actions with their payloads.
+const { mountGame, useGame } = gameClient<typeof game>();
 
 // The game's page: a React component styled with Tailwind CSS. Colours such as
 // bg-primary and text-muted-foreground follow the Gaute app, in light and dark
@@ -27,10 +31,10 @@ const strings = {
     lower: 'lavere',
     correct: 'riktig',
   },
-};
+} as const;
 
 function Game() {
-  const { view, name, act, busy, rejected, playing } = useGame<View>();
+  const { view, name, act, busy, rejected, playing } = useGame();
   const t = useStrings(strings);
   const [value, setValue] = useState('');
   const who = (handle: string | null) => (handle ? name(handle) : t('The group'));
@@ -76,7 +80,7 @@ function Game() {
       ) : null}
       {rejected ? (
         <p role="alert" className="font-semibold text-destructive">
-          {t(rejected)}
+          {t.text(rejected)}
         </p>
       ) : null}
       <ol className="flex flex-col gap-1 text-muted-foreground">
