@@ -205,6 +205,8 @@ test('Bluff hides who wrote what until the reveal, and scores the truth and ever
   });
   const index = (text: string) => options.findIndex((o) => o.text === text);
   const truth = options.findIndex((o) => !['Pancake', 'Sausage', 'Moose'].includes(o.text));
+  // The truth is capitalised like everyone else's answer.
+  expect(options[truth].text[0]).toBe(options[truth].text[0].toLocaleUpperCase());
   await game.act('p1', 'vote', { value: truth });
   await game.act('p2', 'vote', { value: index('Pancake') });
   await game.act('p3', 'vote', { value: index('Pancake') });

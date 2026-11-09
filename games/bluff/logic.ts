@@ -146,6 +146,11 @@ type State = {
 };
 
 const normal = (text: string) => text.trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+// Every answer starts with a capital, so the truth's casing never gives it away.
+const tidy = (text: string) => {
+  const clean = text.trim().replace(/\s+/g, ' ');
+  return clean.charAt(0).toLocaleUpperCase() + clean.slice(1);
+};
 const lie = (payload: Json): { text: string } => {
   const { text } = fields(payload);
   if (typeof text !== 'string' || !text.trim() || text.length > 40)
@@ -155,11 +160,11 @@ const lie = (payload: Json): { text: string } => {
 const truthOf = (state: State) => FACTS[state.order[state.at]].truth[state.lang];
 
 function startVote(state: State, random: () => number) {
-  const options: Option[] = [{ text: truthOf(state), authors: [], truth: true }];
+  const options: Option[] = [{ text: tidy(truthOf(state)), authors: [], truth: true }];
   for (const [author, text] of Object.entries(state.lies)) {
     const same = options.find((o) => !o.truth && normal(o.text) === normal(text));
     if (same) same.authors.push(author);
-    else options.push({ text, authors: [author], truth: false });
+    else options.push({ text: tidy(text), authors: [author], truth: false });
   }
   state.options = shuffled(options.length, random).map((i) => options[i]);
   state.phase = 'vote';
