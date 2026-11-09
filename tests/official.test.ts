@@ -143,3 +143,41 @@ test('Tonight Cards on one shared phone reads vote cards aloud instead of voting
     reason: 'There is no open vote.',
   });
 });
+
+test('Werewolves: the witch saves the victim, and a voted-out hunter takes someone down', async () => {
+  const players = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9'];
+  const game = await session('werewolves', 'phones', players);
+  const role = (p: string) => game.view(p).role as string;
+  const with_ = (r: string) => players.filter((p) => role(p) === r);
+  const [wolves, [seer], [witch], [hunter]] = [
+    with_('wolf'),
+    with_('seer'),
+    with_('witch'),
+    with_('hunter'),
+  ];
+  expect(wolves).toHaveLength(2);
+  expect(with_('doctor')).toHaveLength(0);
+  // Nobody but a werewolf learns who the werewolves are.
+  expect(game.view(seer).pack).toEqual([]);
+  expect(game.view(wolves[0]).pack).toEqual([wolves[1]]);
+  // The witch waits for the werewolves' choice.
+  expect(game.view(witch).todo).toBeNull();
+  const prey = players.find((p) => role(p) === 'villager')!;
+  for (const wolf of wolves) await game.act(wolf, 'kill', { target: prey });
+  await game.act(seer, 'inspect', { target: wolves[0] });
+  expect(game.view(seer).seen[wolves[0]]).toBe(true);
+  expect(game.view(witch).witch).toMatchObject({ victim: prey, heal: true, poison: true });
+  await game.act(witch, 'brew', { save: true, poison: 'nobody' });
+  // Saved: a quiet night, and the healing potion is gone.
+  expect(game.view('p1').phase).toBe('day');
+  expect(game.view('p1').living).toContain(prey);
+  expect(game.view('p1').events.at(-1).kind).toBe('quiet');
+  // The village votes out the hunter, who shoots a werewolf.
+  for (const p of players) await game.act(p, 'vote', { target: hunter });
+  expect(game.view(hunter).todo).toBe('shoot');
+  expect(game.view('p1').phase).toBe('hunt');
+  await game.act(hunter, 'shoot', { target: wolves[0] });
+  expect(game.view('p1').living).not.toContain(wolves[0]);
+  expect(game.view('p1').phase).toBe('night');
+  expect(game.view(witch).witch).toMatchObject({ heal: false, poison: true });
+});

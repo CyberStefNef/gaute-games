@@ -9,41 +9,58 @@ import {
 import { shuffled, target } from '../_kit/rules';
 
 // The classic village-and-werewolves game on everyone's own phone; the app is the
-// narrator. At night the werewolves choose a victim, the seer checks one player and
-// the doctor protects one. By day everyone alive votes someone out.
-type Role = 'wolf' | 'seer' | 'doctor' | 'villager';
+// narrator. At night the werewolves choose a victim and the seer checks one player.
+// Up to seven players, a doctor protects one player each night; from eight, a
+// witch has one healing potion and one poison instead. From nine, a hunter takes
+// someone down with them. By day everyone alive votes someone out.
+type Role = 'wolf' | 'seer' | 'doctor' | 'witch' | 'hunter' | 'villager';
+type Death = 'wolves' | 'poison' | 'vote' | 'hunter' | 'left';
 type Event =
-  | { kind: 'killed'; player: PlayerHandle; round: number }
-  | { kind: 'saved'; round: number }
-  | { kind: 'voted'; player: PlayerHandle; role: Role; round: number }
-  | { kind: 'tie'; round: number }
-  | { kind: 'left'; player: PlayerHandle; role: Role; round: number };
+  | { kind: 'died'; player: PlayerHandle; role: Role; cause: Death; story: number; round: number }
+  | { kind: 'quiet'; round: number }
+  | { kind: 'tie'; round: number };
 type State = {
   roles: Record<PlayerHandle, Role>;
   alive: PlayerHandle[];
-  phase: 'night' | 'day';
+  phase: 'night' | 'day' | 'hunt';
   round: number;
   wolfVotes: Record<PlayerHandle, PlayerHandle>;
   seerPick: PlayerHandle | null;
   doctorPick: PlayerHandle | null;
+  /** The witch's choice tonight: whether she saves the victim, and whom she poisons. */
+  witchDone: boolean;
+  witchSave: boolean;
+  witchPoison: PlayerHandle | null;
+  healUsed: boolean;
+  poisonUsed: boolean;
   /** What the seer has learnt: true for a werewolf. */
   seen: Record<PlayerHandle, boolean>;
   dayVotes: Record<PlayerHandle, PlayerHandle>;
+  /** A dead hunter's last shot, and where the game goes after it. */
+  hunter: PlayerHandle | null;
+  after: 'day' | 'night';
   events: Event[];
   winner: 'village' | 'wolves' | null;
 };
 
 const NOBODY = 'nobody';
+const STORIES = 6;
 const ballot = (payload: Json): { target: PlayerHandle } => {
   const { target: choice } = fields(payload);
   if (choice === NOBODY) return { target: NOBODY };
   return target(payload);
+};
+const brew = (payload: Json): { save: boolean; poison: PlayerHandle } => {
+  const { save, poison } = fields(payload);
+  if (typeof save !== 'boolean' || typeof poison !== 'string') invalid('Choose what to brew.');
+  return { save, poison };
 };
 
 const isAlive = (state: State, player: PlayerHandle) => state.alive.includes(player);
 const aliveWith = (state: State, role: Role) => state.alive.filter((p) => state.roles[p] === role);
 
 function checkWinner(state: State) {
+  if (state.winner) return true;
   const wolves = aliveWith(state, 'wolf').length;
   if (wolves === 0) state.winner = 'village';
   else if (wolves >= state.alive.length - wolves) state.winner = 'wolves';
@@ -60,64 +77,102 @@ function plurality(votes: Record<PlayerHandle, PlayerHandle>) {
   return leaders.length === 1 ? leaders[0] : null;
 }
 
-function nightDone(state: State) {
+/** The werewolves' victim tonight, once they have all chosen. */
+function victim(state: State) {
+  const wolves = aliveWith(state, 'wolf');
+  if (!wolves.every((wolf) => state.wolfVotes[wolf])) return null;
   return (
-    aliveWith(state, 'wolf').every((wolf) => state.wolfVotes[wolf]) &&
-    (aliveWith(state, 'seer').length === 0 || state.seerPick !== null) &&
-    (aliveWith(state, 'doctor').length === 0 || state.doctorPick !== null)
+    plurality(state.wolfVotes) ??
+    Object.values(state.wolfVotes).find((v) => isAlive(state, v)) ??
+    null
   );
 }
 
-function dawn(state: State) {
-  // Werewolves who disagree pick the victim with the most votes; a tie means the
-  // first chosen of the leaders, so the night always ends.
-  const victim =
-    plurality(state.wolfVotes) ?? Object.values(state.wolfVotes).find((v) => isAlive(state, v));
-  if (victim && victim === state.doctorPick)
-    state.events.push({ kind: 'saved', round: state.round });
-  else if (victim) {
-    state.alive = state.alive.filter((p) => p !== victim);
-    state.events.push({ kind: 'killed', player: victim, round: state.round });
+function kill(state: State, player: PlayerHandle, cause: Death, random: () => number) {
+  if (!isAlive(state, player)) return;
+  state.alive = state.alive.filter((p) => p !== player);
+  state.events.push({
+    kind: 'died',
+    player,
+    role: state.roles[player],
+    cause,
+    story: Math.floor(random() * STORIES),
+    round: state.round,
+  });
+  if (state.roles[player] === 'hunter' && cause !== 'left') state.hunter = player;
+}
+
+/** After deaths: the hunter shoots first, then the game moves on or ends. */
+function proceed(state: State, next: 'day' | 'night') {
+  if (state.hunter) {
+    state.phase = 'hunt';
+    state.after = next;
+    return;
   }
+  if (checkWinner(state)) return;
+  if (next === 'night') state.round += 1;
+  state.phase = next;
+}
+
+function nightDone(state: State) {
+  return (
+    victim(state) !== null &&
+    (aliveWith(state, 'seer').length === 0 || state.seerPick !== null) &&
+    (aliveWith(state, 'doctor').length === 0 || state.doctorPick !== null) &&
+    (aliveWith(state, 'witch').length === 0 || state.witchDone)
+  );
+}
+
+function dawn(state: State, random: () => number) {
+  const prey = victim(state);
+  const saved = prey !== null && (prey === state.doctorPick || state.witchSave);
+  const before = state.events.length;
+  if (prey && !saved) kill(state, prey, 'wolves', random);
+  if (state.witchPoison) kill(state, state.witchPoison, 'poison', random);
+  if (state.events.length === before) state.events.push({ kind: 'quiet', round: state.round });
   state.wolfVotes = {};
   state.seerPick = null;
   state.doctorPick = null;
-  if (!checkWinner(state)) state.phase = 'day';
+  state.witchDone = false;
+  state.witchSave = false;
+  state.witchPoison = null;
+  proceed(state, 'day');
 }
 
-function dusk(state: State) {
+function dusk(state: State, random: () => number) {
   const out = plurality(state.dayVotes);
-  if (out && out !== NOBODY && isAlive(state, out)) {
-    state.alive = state.alive.filter((p) => p !== out);
-    state.events.push({ kind: 'voted', player: out, role: state.roles[out], round: state.round });
-  } else state.events.push({ kind: 'tie', round: state.round });
+  if (out && out !== NOBODY && isAlive(state, out)) kill(state, out, 'vote', random);
+  else state.events.push({ kind: 'tie', round: state.round });
   state.dayVotes = {};
-  if (!checkWinner(state)) {
-    state.phase = 'night';
-    state.round += 1;
-  }
+  proceed(state, 'night');
 }
 
-function settle(state: State) {
+function settle(state: State, random: () => number) {
   if (state.winner) return;
-  if (state.phase === 'night' && nightDone(state)) dawn(state);
-  else if (state.phase === 'day' && state.alive.every((p) => state.dayVotes[p])) dusk(state);
+  if (state.phase === 'night' && nightDone(state)) dawn(state, random);
+  else if (state.phase === 'day' && state.alive.every((p) => state.dayVotes[p]))
+    dusk(state, random);
 }
+
+const nightRole = (state: State, playerId: PlayerHandle | null, role: Role) =>
+  state.phase === 'night' &&
+  playerId !== null &&
+  state.roles[playerId] === role &&
+  isAlive(state, playerId);
 
 export const game = defineGame({
   setup: ({ players, random }): State => {
     const order = shuffled(players.length, random).map((i) => players[i]);
-    const wolves = players.length >= 12 ? 3 : players.length >= 8 ? 2 : 1;
+    const count = players.length;
+    const wolves = count >= 12 ? 3 : count >= 8 ? 2 : 1;
+    const specials: Role[] = [
+      'seer',
+      ...(count >= 8 ? (['witch'] as Role[]) : count >= 6 ? (['doctor'] as Role[]) : []),
+      ...(count >= 9 ? (['hunter'] as Role[]) : []),
+    ];
     const roles: Record<PlayerHandle, Role> = {};
     order.forEach((player, index) => {
-      roles[player] =
-        index < wolves
-          ? 'wolf'
-          : index === wolves
-            ? 'seer'
-            : index === wolves + 1 && players.length >= 6
-              ? 'doctor'
-              : 'villager';
+      roles[player] = index < wolves ? 'wolf' : (specials[index - wolves] ?? 'villager');
     });
     return {
       roles,
@@ -127,8 +182,15 @@ export const game = defineGame({
       wolfVotes: {},
       seerPick: null,
       doctorPick: null,
+      witchDone: false,
+      witchSave: false,
+      witchPoison: null,
+      healUsed: false,
+      poisonUsed: false,
       seen: {},
       dayVotes: {},
+      hunter: null,
+      after: 'day',
       events: [],
       winner: null,
     };
@@ -136,105 +198,104 @@ export const game = defineGame({
   actions: (action) => ({
     kill: action({
       payload: target,
-      run: (state, { playerId, payload }) => {
-        if (
-          state.phase !== 'night' ||
-          !playerId ||
-          state.roles[playerId] !== 'wolf' ||
-          !isAlive(state, playerId)
-        )
-          invalid('Only werewolves hunt at night.');
+      run: (state, { playerId, payload, random }) => {
+        if (!nightRole(state, playerId, 'wolf')) invalid('Only werewolves hunt at night.');
         if (!isAlive(state, payload.target) || state.roles[payload.target] === 'wolf')
           invalid('Choose someone in the village.');
-        state.wolfVotes[playerId] = payload.target;
-        settle(state);
+        state.wolfVotes[playerId!] = payload.target;
+        settle(state, random);
       },
     }),
     inspect: action({
       payload: target,
-      run: (state, { playerId, payload }) => {
-        if (
-          state.phase !== 'night' ||
-          !playerId ||
-          state.roles[playerId] !== 'seer' ||
-          !isAlive(state, playerId)
-        )
-          invalid('Only the seer looks at night.');
+      run: (state, { playerId, payload, random }) => {
+        if (!nightRole(state, playerId, 'seer')) invalid('Only the seer looks at night.');
         if (state.seerPick !== null) invalid('You already looked tonight.');
         if (payload.target === playerId || !isAlive(state, payload.target))
           invalid('Choose someone else who is alive.');
         state.seerPick = payload.target;
         state.seen[payload.target] = state.roles[payload.target] === 'wolf';
-        settle(state);
+        settle(state, random);
       },
     }),
     protect: action({
       payload: target,
-      run: (state, { playerId, payload }) => {
-        if (
-          state.phase !== 'night' ||
-          !playerId ||
-          state.roles[playerId] !== 'doctor' ||
-          !isAlive(state, playerId)
-        )
-          invalid('Only the doctor protects at night.');
+      run: (state, { playerId, payload, random }) => {
+        if (!nightRole(state, playerId, 'doctor')) invalid('Only the doctor protects at night.');
         if (!isAlive(state, payload.target)) invalid('Choose someone who is alive.');
         state.doctorPick = payload.target;
-        settle(state);
+        settle(state, random);
+      },
+    }),
+    // The witch acts once the werewolves have chosen: save their victim, poison
+    // someone, both or neither. Each potion works once per game.
+    brew: action({
+      payload: brew,
+      run: (state, { playerId, payload, random }) => {
+        if (!nightRole(state, playerId, 'witch')) invalid('Only the witch brews at night.');
+        if (state.witchDone) invalid('You already chose tonight.');
+        if (victim(state) === null) invalid('Wait for the werewolves to choose.');
+        if (payload.save && state.healUsed) invalid('Your healing potion is used up.');
+        const poison = payload.poison === NOBODY ? null : payload.poison;
+        if (poison !== null && (state.poisonUsed || !isAlive(state, poison) || poison === playerId))
+          invalid('You can’t poison them.');
+        state.witchDone = true;
+        state.witchSave = payload.save;
+        state.witchPoison = poison;
+        if (payload.save) state.healUsed = true;
+        if (poison) state.poisonUsed = true;
+        settle(state, random);
+      },
+    }),
+    // A dead hunter's last shot.
+    shoot: action({
+      payload: target,
+      run: (state, { playerId, payload, random }) => {
+        if (state.phase !== 'hunt' || playerId !== state.hunter)
+          invalid('Only the hunter shoots now.');
+        if (!isAlive(state, payload.target)) invalid('Choose someone who is alive.');
+        state.hunter = null;
+        kill(state, payload.target, 'hunter', random);
+        proceed(state, state.after);
       },
     }),
     vote: action({
       payload: ballot,
-      run: (state, { playerId, payload }) => {
+      run: (state, { playerId, payload, random }) => {
         if (state.phase !== 'day' || !playerId || !isAlive(state, playerId))
           invalid('Only the living vote by day.');
         if (payload.target !== NOBODY && !isAlive(state, payload.target))
           invalid('Choose someone who is alive.');
         state.dayVotes[playerId] = payload.target;
-        settle(state);
+        settle(state, random);
       },
     }),
   }),
-  playerLeft: (state, { playerId }) => {
-    if (isAlive(state, playerId)) {
-      state.alive = state.alive.filter((p) => p !== playerId);
-      state.events.push({
-        kind: 'left',
-        player: playerId,
-        role: state.roles[playerId],
-        round: state.round,
-      });
-    }
+  playerLeft: (state, { playerId, random }) => {
+    kill(state, playerId, 'left', random);
     delete state.wolfVotes[playerId];
     delete state.dayVotes[playerId];
     if (state.seerPick === playerId) state.seerPick = null;
-    if (!checkWinner(state)) settle(state);
+    if (state.hunter === playerId) {
+      state.hunter = null;
+      proceed(state, state.after);
+    }
+    if (!checkWinner(state)) settle(state, random);
   },
   view: (state, playerId) => {
     const role = playerId ? state.roles[playerId] : null;
     const alive = playerId ? isAlive(state, playerId) : false;
     const wolf = role === 'wolf';
-    // What this player still has to do in this phase.
-    const todo =
-      !alive || state.winner
-        ? null
-        : state.phase === 'day'
-          ? state.dayVotes[playerId!]
-            ? null
-            : 'vote'
-          : wolf
-            ? state.wolfVotes[playerId!]
-              ? null
-              : 'kill'
-            : role === 'seer'
-              ? state.seerPick
-                ? null
-                : 'inspect'
-              : role === 'doctor'
-                ? state.doctorPick
-                  ? null
-                  : 'protect'
-                : null;
+    const prey = victim(state);
+    let todo: 'kill' | 'inspect' | 'protect' | 'brew' | 'shoot' | 'vote' | null = null;
+    if (state.winner || !playerId) todo = null;
+    else if (state.phase === 'hunt') todo = state.hunter === playerId ? 'shoot' : null;
+    else if (!alive) todo = null;
+    else if (state.phase === 'day') todo = state.dayVotes[playerId] ? null : 'vote';
+    else if (wolf) todo = state.wolfVotes[playerId] ? null : 'kill';
+    else if (role === 'seer') todo = state.seerPick ? null : 'inspect';
+    else if (role === 'doctor') todo = state.doctorPick ? null : 'protect';
+    else if (role === 'witch') todo = state.witchDone || prey === null ? null : 'brew';
     return {
       role,
       alive,
@@ -246,18 +307,12 @@ export const game = defineGame({
       pack: wolf ? aliveWith(state, 'wolf').filter((p) => p !== playerId) : ([] as PlayerHandle[]),
       packVotes: wolf ? state.wolfVotes : ({} as Record<PlayerHandle, PlayerHandle>),
       seen: role === 'seer' ? state.seen : ({} as Record<PlayerHandle, boolean>),
-      yourChoice:
-        !playerId || !alive
-          ? null
-          : state.phase === 'day'
-            ? (state.dayVotes[playerId] ?? null)
-            : wolf
-              ? (state.wolfVotes[playerId] ?? null)
-              : role === 'seer'
-                ? state.seerPick
-                : role === 'doctor'
-                  ? state.doctorPick
-                  : null,
+      // The witch sees tonight's victim and what she has left.
+      witch:
+        role === 'witch'
+          ? { victim: prey, heal: !state.healUsed, poison: !state.poisonUsed }
+          : null,
+      hunter: state.phase === 'hunt' ? state.hunter : null,
       votes: Object.keys(state.dayVotes).length,
       events: state.events.slice(-4),
       winner: state.winner,

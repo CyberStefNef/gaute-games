@@ -2,23 +2,26 @@
   "slug": "werewolves",
   "name": "Werewolves",
   "description": "Find the werewolves before they take the village.",
-  "players": { "min": 5, "max": 16 },
+  "players": {
+    "min": 5,
+    "max": 16
+  },
   "modes": ["phones"],
   "howToPlay": [
-    "Everyone gets a secret role: villager, werewolf, seer or doctor.",
-    "At night, the werewolves pick a victim, the seer checks someone and the doctor protects someone.",
-    "By day, everyone talks and votes someone out.",
-    "The village wins when the werewolves are gone; the werewolves win when they equal the village."
+    "Everyone gets a secret role. The app narrates nights and days.",
+    "At night the werewolves pick a victim and the seer checks someone. Small groups have a doctor; from eight, a witch.",
+    "From nine players, a hunter takes someone down when they die.",
+    "By day everyone talks and votes someone out. The village wins when the werewolves are gone."
   ],
   "translations": {
     "nb": {
       "name": "Varulver",
       "description": "Finn varulvene før de tar landsbyen.",
       "howToPlay": [
-        "Alle får en hemmelig rolle: landsbyboer, varulv, spåkone eller lege.",
-        "Om natten velger varulvene et offer, spåkona sjekker noen og legen beskytter noen.",
-        "Om dagen snakker alle og stemmer ut en spiller.",
-        "Landsbyen vinner når varulvene er borte; varulvene vinner når de er like mange som landsbyen."
+        "Alle får en hemmelig rolle. Appen forteller gjennom natt og dag.",
+        "Om natten velger varulvene et offer og spåkona sjekker noen. Små grupper har en lege; fra åtte er det en heks.",
+        "Fra ni spillere tar en jeger med seg noen når han dør.",
+        "Om dagen diskuterer alle og stemmer ut en spiller. Landsbyen vinner når varulvene er borte."
       ]
     }
   }
