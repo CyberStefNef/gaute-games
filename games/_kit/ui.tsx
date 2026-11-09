@@ -1,5 +1,5 @@
-// Small building blocks shared by the official games, styled with the app's
-// theme through Tailwind. Creators are free to use anything else.
+// Building blocks shared by the official games, styled with the app's theme
+// through Tailwind. Creators are free to use anything else.
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { AnyGameRules } from '@gaute/games-sdk/logic';
 import { gameClient } from '@gaute/games-sdk/react';
@@ -7,72 +7,101 @@ import { gameClient } from '@gaute/games-sdk/react';
 // These parts work in any game, so they only use what every game has.
 const { useGame } = gameClient<AnyGameRules>();
 
-/** The page, with the reason the last action was rejected underneath. */
+/**
+ * A screen laid out like the app's own: the main card centred in the space,
+ * secondary details (`below`) just above the actions, and the actions pinned to
+ * the bottom with the reason the last action was rejected above them.
+ */
 export function Page({
   children,
+  below,
+  actions,
   translate,
 }: {
   children: ReactNode;
+  below?: ReactNode;
+  actions?: ReactNode;
   /** Translates the rules' rejection reasons: pass `t.text` from `useStrings`. */
   translate: (text: string) => string;
 }) {
   const { rejected } = useGame();
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-4 p-4 text-base leading-snug">
-      {children}
-      {rejected ? (
-        <p role="alert" className="font-semibold text-destructive">
-          {translate(rejected)}
-        </p>
+    <main className="mx-auto flex min-h-screen max-w-[560px] flex-col text-base leading-snug">
+      <div className="flex flex-1 flex-col justify-center gap-4 px-5 py-8">{children}</div>
+      {below ? <div className="flex flex-col gap-3 px-5 pb-4">{below}</div> : null}
+      {actions || rejected ? (
+        <div className="sticky bottom-0 flex flex-col gap-2 bg-background px-5 pt-2 pb-[max(20px,env(safe-area-inset-bottom))]">
+          {rejected ? (
+            <p role="alert" className="text-center text-sm font-medium text-destructive">
+              {translate(rejected)}
+            </p>
+          ) : null}
+          {actions}
+        </div>
       ) : null}
     </main>
   );
 }
 
-export const Card = ({ children }: { children: ReactNode }) => (
-  <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 text-card-foreground">
+/** The screen's main card: centred, roomy, like a card on the table. */
+export const Hero = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <section
+    className={`flex flex-col items-center gap-4 rounded-2xl border border-border bg-card px-6 py-10 text-center text-card-foreground ${className}`}
+  >
     {children}
   </section>
 );
 
-export const Label = ({ children }: { children: ReactNode }) => (
-  <p className="text-[13px] font-semibold tracking-wider text-muted-foreground uppercase">
+export const Card = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <section
+    className={`flex flex-col gap-3 rounded-xl border border-border bg-card p-5 text-card-foreground ${className}`}
+  >
     {children}
-  </p>
+  </section>
 );
 
-export const Big = ({ children }: { children: ReactNode }) => (
-  <p className="text-[28px] leading-tight font-bold break-words">{children}</p>
+/** A small heading line, with optional text on the right. */
+export const Label = ({ children, aside }: { children: ReactNode; aside?: ReactNode }) => (
+  <div className="flex items-baseline justify-between gap-3 text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">
+    <span>{children}</span>
+    {aside ? <span className="font-medium tracking-normal normal-case">{aside}</span> : null}
+  </div>
+);
+
+export const Title = ({ children, large }: { children: ReactNode; large?: boolean }) => (
+  <h1
+    className={`${large ? 'text-[34px]' : 'text-[26px]'} leading-tight font-bold tracking-tight text-balance break-words`}
+  >
+    {children}
+  </h1>
 );
 
 export const Muted = ({ children }: { children: ReactNode }) => (
-  <p className="text-muted-foreground">{children}</p>
+  <p className="text-[15px] text-muted-foreground">{children}</p>
 );
 
-/** A full-width button; `primary` for the main action, `pressed` for a chosen option. */
+/** A full-width button; `primary` for the main action. */
 export function Button({
   primary,
-  pressed,
   className = '',
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { primary?: boolean; pressed?: boolean }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { primary?: boolean }) {
   const { busy } = useGame();
   return (
     <button
       type="button"
-      aria-pressed={pressed}
       disabled={busy || props.disabled}
-      className={`min-h-12 rounded-lg border px-4 py-2.5 font-semibold disabled:opacity-55 ${
+      className={`min-h-12 rounded-xl px-4 font-semibold transition-opacity active:opacity-70 disabled:opacity-50 ${
         primary
-          ? 'border-primary bg-primary text-center text-primary-foreground'
-          : 'border-border bg-card text-left text-card-foreground'
-      } ${pressed ? 'border-primary shadow-[inset_0_0_0_2px_var(--primary)]' : ''} ${className}`}
+          ? 'bg-primary text-primary-foreground'
+          : 'border border-border bg-card text-card-foreground'
+      } ${className}`}
       {...props}
     />
   );
 }
 
-/** One button per player, for votes and accusations. */
+/** One row per player, for votes and accusations; the chosen one is marked. */
 export function PlayerChoice({
   handles,
   chosen,
@@ -82,36 +111,88 @@ export function PlayerChoice({
   chosen: string | null;
   onChoose: (handle: string) => void;
 }) {
-  const { name, playing } = useGame();
+  const { name, playing, busy } = useGame();
   return (
-    <div className="flex flex-col gap-2">
-      {handles.map((handle) => (
-        <Button
-          key={handle}
-          pressed={chosen === handle}
-          disabled={!playing}
-          onClick={() => onChoose(handle)}
-        >
-          {name(handle)}
-        </Button>
-      ))}
+    <div className="flex w-full flex-col gap-2">
+      {handles.map((handle) => {
+        const selected = chosen === handle;
+        return (
+          <button
+            key={handle}
+            type="button"
+            aria-pressed={selected}
+            disabled={busy || !playing}
+            onClick={() => onChoose(handle)}
+            className={`flex min-h-12 items-center justify-between rounded-xl border px-4 text-left font-medium transition-colors disabled:opacity-60 ${
+              selected
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-background text-foreground active:bg-muted'
+            }`}
+          >
+            {name(handle)}
+            {selected ? <Check /> : null}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-/** Vote counts as bars, highest first. */
+const Check = () => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 24 24"
+    className="size-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </svg>
+);
+
+/** Counts per player as bars, highest first. */
 export function Tally({ counts }: { counts: Record<string, number> }) {
   const { name } = useGame();
   const most = Math.max(1, ...Object.values(counts));
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([handle, count]) => (
-      <div key={handle} className="flex items-center justify-between gap-3">
-        <span>{name(handle)}</span>
-        <div className="h-2 flex-1 overflow-hidden rounded bg-muted">
-          <div className="h-2 rounded bg-primary" style={{ width: `${(count / most) * 100}%` }} />
-        </div>
-        <strong>{count}</strong>
-      </div>
-    ));
+  return (
+    <div className="flex w-full flex-col gap-2.5 text-left">
+      {Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([handle, count]) => (
+          <div
+            key={handle}
+            className="grid grid-cols-[minmax(0,7rem)_1fr_1.5rem] items-center gap-3"
+          >
+            <span className="truncate">{name(handle)}</span>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-2 rounded-full bg-primary"
+                style={{ width: `${(count / most) * 100}%` }}
+              />
+            </div>
+            <strong className="text-right tabular-nums">{count}</strong>
+          </div>
+        ))}
+    </div>
+  );
+}
+
+/** Players with their points, highest first. */
+export function Scores({ scores }: { scores: Record<string, number> }) {
+  const { name } = useGame();
+  return (
+    <div className="flex flex-col divide-y divide-border">
+      {Object.entries(scores)
+        .sort((a, b) => b[1] - a[1])
+        .map(([handle, score]) => (
+          <div key={handle} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
+            <span>{name(handle)}</span>
+            <strong className="tabular-nums">{score}</strong>
+          </div>
+        ))}
+    </div>
+  );
 }

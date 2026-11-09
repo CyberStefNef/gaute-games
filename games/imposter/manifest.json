@@ -1,6 +1,6 @@
 {
   "slug": "imposter",
-  "version": 2,
+  "version": 3,
   "name": "Imposter",
   "description": "Everyone gets the secret word except one player. Give clues out loud, then vote for the imposter.",
   "players": {

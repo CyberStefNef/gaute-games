@@ -1,7 +1,7 @@
 import type { ViewOf } from '@gaute/games-sdk/logic';
 import { gameClient, useStrings } from '@gaute/games-sdk/react';
 import type { game } from './logic';
-import { Big, Button, Card, Label, Muted, Page, PlayerChoice, Tally } from '../_kit/ui';
+import { Button, Card, Hero, Label, Muted, Page, PlayerChoice, Tally, Title } from '../_kit/ui';
 import '../_kit/style.css';
 
 const { mountGame, useGame } = gameClient<typeof game>();
@@ -12,18 +12,18 @@ const en = {
   duel: 'Duel',
   vote: 'Vote',
   rule: 'New rule',
-  ending: 'Rule ends',
+  ending: 'Rule over',
   '{count} of {total} voted': '{count} of {total} voted',
-  '{n} cards left': '{n} cards left',
+  '{n} left': '{n} cards left',
   'Last card': 'Last card',
-  'Active rules': 'Active rules',
+  'Rules in play': 'Rules in play',
   'Next card': 'Next card',
   'Show votes': 'Show votes',
-  'That was the deck!': 'That was the deck!',
+  'That’s the deck': 'That’s the deck',
+  'On three, everyone points.': 'On three, everyone points.',
   'There is no open vote.': 'There is no open vote.',
   'The deck is finished.': 'The deck is finished.',
   'Choose a player in this game.': 'Choose a player in this game.',
-  'On three, everyone points at their pick.': 'On three, everyone points at their pick.',
 } as const;
 const nb: Record<keyof typeof en, string> = {
   prompt: 'Spørsmål',
@@ -32,16 +32,16 @@ const nb: Record<keyof typeof en, string> = {
   rule: 'Ny regel',
   ending: 'Regelen er over',
   '{count} of {total} voted': '{count} av {total} har stemt',
-  '{n} cards left': '{n} kort igjen',
+  '{n} left': '{n} kort igjen',
   'Last card': 'Siste kort',
-  'Active rules': 'Aktive regler',
+  'Rules in play': 'Regler som gjelder',
   'Next card': 'Neste kort',
   'Show votes': 'Vis stemmene',
-  'That was the deck!': 'Det var hele kortstokken!',
+  'That’s the deck': 'Det var kortstokken',
+  'On three, everyone points.': 'På tre peker alle.',
   'There is no open vote.': 'Det er ingen åpen avstemning.',
   'The deck is finished.': 'Kortstokken er tom.',
   'Choose a player in this game.': 'Velg en spiller i dette spillet.',
-  'On three, everyone points at their pick.': 'På tre peker alle på sitt valg.',
 };
 
 /** Card text with {p1}/{p2} replaced by highlighted player names. */
@@ -50,9 +50,9 @@ function CardText({ text, refs }: { text: string; refs: Refs }) {
   return text.split(/(\{p[12]\})/).map((part, index) => {
     const handle = /^\{p[12]\}$/.test(part) ? refs[part.slice(1, -1)] : undefined;
     return handle ? (
-      <b key={index} className="text-primary">
+      <span key={index} className="text-primary">
         {name(handle)}
-      </b>
+      </span>
     ) : (
       part
     );
@@ -62,20 +62,56 @@ function CardText({ text, refs }: { text: string; refs: Refs }) {
 function Game() {
   const { view, players, act, playing } = useGame();
   const t = useStrings({ en, nb });
-  const live = playing && !view.finished;
   const present = players.filter((player) => !player.left).map((player) => player.handle);
   const vote = view.vote;
+  const open = vote !== null && vote.tally === null;
+  // A rule just drawn is the card itself; the list shows the others.
+  const rules =
+    view.card.kind === 'rule' && !view.card.ending ? view.rules.slice(0, -1) : view.rules;
+
+  if (view.finished)
+    return (
+      <Page translate={t.text}>
+        <Hero>
+          <Title large>{t('That’s the deck')}</Title>
+        </Hero>
+      </Page>
+    );
+
   return (
-    <Page translate={t.text}>
-      <Card>
+    <Page
+      translate={t.text}
+      actions={
+        playing ? (
+          <Button primary onClick={() => act('next')}>
+            {open && vote.voted > 0 ? t('Show votes') : t('Next card')}
+          </Button>
+        ) : null
+      }
+      below={
+        rules.length ? (
+          <Card>
+            <Label>{t('Rules in play')}</Label>
+            <ul className="flex flex-col gap-2">
+              {rules.map((rule, index) => (
+                <li key={index}>
+                  <CardText text={rule.text} refs={rule.refs} />
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ) : null
+      }
+    >
+      <Hero>
         <Label>{t(view.card.ending ? 'ending' : view.card.kind)}</Label>
-        <Big>
+        <Title large>
           <CardText text={view.card.text} refs={view.card.refs} />
-        </Big>
+        </Title>
         {view.card.kind === 'vote' && !view.card.ending && !vote ? (
-          <Muted>{t('On three, everyone points at their pick.')}</Muted>
+          <Muted>{t('On three, everyone points.')}</Muted>
         ) : null}
-        {vote && !vote.tally ? (
+        {open ? (
           <>
             <PlayerChoice
               handles={present}
@@ -88,29 +124,10 @@ function Game() {
           </>
         ) : null}
         {vote?.tally ? <Tally counts={vote.tally} /> : null}
-      </Card>
-      {view.finished ? (
-        <Big>{t('That was the deck!')}</Big>
-      ) : live ? (
-        <Button primary onClick={() => act('next')}>
-          {vote && !vote.tally && vote.voted > 0 ? t('Show votes') : t('Next card')}
-        </Button>
-      ) : null}
-      {view.finished ? null : (
-        <Muted>
-          {view.remaining ? t('{n} cards left', { n: view.remaining }) : t('Last card')}
-        </Muted>
-      )}
-      {view.rules.length ? (
-        <Card>
-          <Label>{t('Active rules')}</Label>
-          {view.rules.map((rule, index) => (
-            <p key={index}>
-              <CardText text={rule.text} refs={rule.refs} />
-            </p>
-          ))}
-        </Card>
-      ) : null}
+      </Hero>
+      <p className="text-center text-sm text-muted-foreground">
+        {view.remaining ? t('{n} left', { n: view.remaining }) : t('Last card')}
+      </p>
     </Page>
   );
 }
