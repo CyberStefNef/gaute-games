@@ -8,9 +8,12 @@ React, Tailwind CSS and npm. Do not add dependencies a game does not strictly ne
 
 A game is a folder `games/<slug>/` (lowercase letters, digits and dashes):
 
-- `manifest.json`: `slug` (folder name), `name` (≤40), `description` (≤200), `players` `{ "min": 2+, "max": ≤16 }`,
+- `manifest.json`: `slug` (folder name), `name` (≤40), `description` (one short line; ≤200), `players` `{ "min": 2+, "max": ≤16 }`,
   `modes` (one or more of `phones`, `pass`, `shared`) and optional `translations`
-  (`{ "nb": { "name", "description" } }`).
+  (`{ "nb": { "name", "description", "howToPlay" } }`), and `howToPlay`: 1–6
+  short steps shown on the game's page in Gaute.
+- `icon.svg`: a square, full-colour icon (`viewBox="0 0 96 96"`, ≤12 KB) drawn
+  with shapes and gradients only: no text, images, links, styles or scripts.
 - `logic.ts`: the rules, imported from `@gaute/games-sdk/logic`.
 - `client.tsx`: the screen, a React component mounted with `mountGame` from
   `@gaute/games-sdk/react` (or `client.ts` with any other framework, using

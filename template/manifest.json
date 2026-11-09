@@ -2,12 +2,25 @@
   "slug": "my-game",
   "name": "Higher or Lower",
   "description": "Guess the secret number between 1 and 100. Each guess tells you higher or lower.",
-  "players": { "min": 2, "max": 8 },
+  "players": {
+    "min": 2,
+    "max": 8
+  },
   "modes": ["phones", "pass", "shared"],
+  "howToPlay": [
+    "A secret number from 1 to 100 is picked.",
+    "Take turns guessing; each guess says higher or lower.",
+    "Whoever finds it wins."
+  ],
   "translations": {
     "nb": {
       "name": "Høyere eller lavere",
-      "description": "Gjett det hemmelige tallet mellom 1 og 100. Hver gjetning sier høyere eller lavere."
+      "description": "Gjett det hemmelige tallet mellom 1 og 100. Hver gjetning sier høyere eller lavere.",
+      "howToPlay": [
+        "Et hemmelig tall fra 1 til 100 blir valgt.",
+        "Gjett etter tur; hver gjetning sier høyere eller lavere.",
+        "Den som finner det, vinner."
+      ]
     }
   }
 }

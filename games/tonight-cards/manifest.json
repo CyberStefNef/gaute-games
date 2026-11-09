@@ -1,16 +1,26 @@
 {
   "slug": "tonight-cards",
   "name": "Tonight Cards",
-  "description": "A shared deck of prompts, duels, votes and rules that last a few cards.",
+  "description": "Prompts, duels, votes and silly rules.",
   "players": {
     "min": 3,
     "max": 16
   },
   "modes": ["phones", "shared"],
+  "howToPlay": [
+    "Draw a card and do what it says.",
+    "Prompts and duels name players; votes ask the whole group.",
+    "Rule cards stay in play for a few cards."
+  ],
   "translations": {
     "nb": {
       "name": "Kveldskort",
-      "description": "En felles kortstokk med spørsmål, dueller, avstemninger og regler som varer noen kort."
+      "description": "Spørsmål, dueller, avstemninger og tøysete regler.",
+      "howToPlay": [
+        "Trekk et kort og gjør det som står.",
+        "Spørsmål og dueller nevner spillere; avstemninger spør hele gruppa.",
+        "Regelkort gjelder i noen kort."
+      ]
     }
   }
 }

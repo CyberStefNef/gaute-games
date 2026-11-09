@@ -5,12 +5,15 @@ export const LIMITS: { logic: number; client: number; maxPlayers: number };
 export const MODES: Mode[];
 export type Manifest = {
   slug: string;
-  version: number;
   name: string;
   description: string;
   players: { min: number; max: number };
   modes: Mode[];
-  translations: Record<string, { name: string; description: string }>;
+  /** Short steps shown on the game's page in Gaute. */
+  howToPlay: string[];
+  /** The game's icon.svg, checked by sdk/icon.ts. */
+  icon: string;
+  translations: Record<string, { name: string; description: string; howToPlay: string[] }>;
 };
 export type BundledGame = Manifest & {
   hash: string;

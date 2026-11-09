@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import { build } from 'vite-plus';
+import { iconProblem } from '../sdk/icon.ts';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const LIMITS = { logic: 256 * 1024, client: 512 * 1024, maxPlayers: 16 };
@@ -49,16 +50,41 @@ export function readManifest(slug, dir = path.join(ROOT, 'games', slug)) {
     modes.some((mode) => !MODES.includes(mode))
   )
     problems.push(`"modes" must list one or more of ${MODES.join(', ')}`);
+  const steps = (list) =>
+    Array.isArray(list) &&
+    list.length >= 1 &&
+    list.length <= 6 &&
+    list.every((step) => text(step, 140));
+  if (!steps(value.howToPlay))
+    problems.push('"howToPlay" must list 1–6 short steps (each ≤140 characters)');
   for (const [locale, entry] of Object.entries(value.translations ?? {}))
-    if (!/^[a-z]{2}$/.test(locale) || !text(entry?.name, 40) || !text(entry?.description, 200))
-      problems.push(`translation "${locale}" needs a name (≤40) and description (≤200)`);
-  if (problems.length) throw Error(`games/${slug}/manifest.json: ${problems.join('; ')}`);
+    if (
+      !/^[a-z]{2}$/.test(locale) ||
+      !text(entry?.name, 40) ||
+      !text(entry?.description, 200) ||
+      !steps(entry?.howToPlay) ||
+      entry.howToPlay.length !== value.howToPlay?.length
+    )
+      problems.push(
+        `translation "${locale}" needs a name (≤40), description (≤200) and the same number of howToPlay steps`,
+      );
+  let icon = '';
+  try {
+    icon = readFileSync(path.join(dir, 'icon.svg'), 'utf8').trim();
+  } catch {
+    problems.push('add icon.svg');
+  }
+  const unsafe = icon ? iconProblem(icon) : null;
+  if (unsafe) problems.push(`icon.svg ${unsafe}`);
+  if (problems.length) throw Error(`games/${slug}: ${problems.join('; ')}`);
   return {
     slug,
     name: value.name,
     description: value.description,
     players: { min, max },
     modes,
+    howToPlay: value.howToPlay,
+    icon,
     translations: value.translations ?? {},
   };
 }

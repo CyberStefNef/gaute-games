@@ -110,3 +110,20 @@ test('payload validators run before the action, and actions without one get null
     reason: 'A number, please.',
   });
 });
+
+test('game icons may only contain shapes and gradients', async () => {
+  const { iconProblem } = await import('../sdk/icon.ts');
+  const ok =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" fill="url(#g)"/></svg>';
+  expect(iconProblem(ok)).toBeNull();
+  for (const bad of [
+    ok.replace('<rect', '<script>alert(1)</script><rect'),
+    ok.replace('<rect', '<rect onload="x()"'),
+    ok.replace('<rect', '<image href="https://example.com/a.png"/><rect'),
+    ok.replace('url(#g)', 'url(https://example.com/a)'),
+    ok.replace('<rect', '<text>Hi</text><rect'),
+    ok.replace('0 0 96 96', '0 0 96 48'),
+    '<?xml version="1.0"?>' + ok,
+  ])
+    expect(iconProblem(bad)).not.toBeNull();
+});

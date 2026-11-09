@@ -20,7 +20,8 @@
     "./runtime": "./sdk/runtime.ts",
     "./document": "./sdk/document.ts",
     "./react": "./sdk/react.tsx",
-    "./tailwind.css": "./sdk/tailwind.css"
+    "./tailwind.css": "./sdk/tailwind.css",
+    "./icon": "./sdk/icon.ts"
   },
   "scripts": {
     "new": "node tools/new.mjs",
