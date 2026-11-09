@@ -1,130 +1,221 @@
+import { defineGame, invalid, type Mode, type PlayerHandle } from '@gaute/games-sdk/logic';
 import {
-  defineGame,
-  fields,
-  invalid,
-  type Json,
-  type Mode,
-  type PlayerHandle,
-} from '@gaute/games-sdk/logic';
+  langOf,
+  option,
+  score,
+  shuffled,
+  target,
+  zeroScores,
+  type Lang,
+  type Text,
+} from '../_kit/rules';
 
-// Everyone except the imposter sees the secret word. Players give spoken clues,
-// then vote. The group wins a round when the most votes land on the imposter.
-// On own phones each player votes privately. Passing one phone, each player sees
-// their role in turn, then the group agrees on one accusation on the shared screen.
-const WORDS: Record<string, string[]> = {
-  en: [
-    'Jukebox',
-    'Darts',
-    'Karaoke',
-    'Happy hour',
-    'Bartender',
-    'Peanuts',
-    'Pool table',
-    'Toast',
-    'Coaster',
-    'Quiz night',
-    'Last call',
-    'Terrace',
-    'Taxi queue',
-    'Kebab',
-    'Coat check',
-    'Dance floor',
-  ],
-  nb: [
-    'Jukeboks',
-    'Dart',
-    'Karaoke',
-    'Happy hour',
-    'Bartender',
-    'Peanøtter',
-    'Biljardbord',
-    'Skål',
-    'Ølbrikke',
-    'Quizkveld',
-    'Siste bestilling',
-    'Uteservering',
-    'Taxikø',
-    'Kebab',
-    'Garderobe',
-    'Dansegulv',
-  ],
-};
+// Everyone but the imposter sees the secret word; the imposter only sees its
+// category. Players give one-word clues and vote. A caught imposter gets one last
+// chance: name the word and steal the round. Seven or more players get two imposters.
+type Category = { name: Text; words: Text[] };
+const w = (en: string, nb: string): Text => ({ en, nb });
+const CATEGORIES: Category[] = [
+  {
+    name: w('Food', 'Mat'),
+    words: [
+      w('Pizza', 'Pizza'),
+      w('Taco', 'Taco'),
+      w('Sushi', 'Sushi'),
+      w('Waffles', 'Vafler'),
+      w('Kebab', 'Kebab'),
+      w('Meatballs', 'Kjøttkaker'),
+      w('Brown cheese', 'Brunost'),
+      w('Hot dog', 'Pølse i brød'),
+      w('Pancakes', 'Pannekaker'),
+      w('Ice cream', 'Iskrem'),
+      w('Shrimp', 'Reker'),
+      w('Popcorn', 'Popkorn'),
+    ],
+  },
+  {
+    name: w('Animals', 'Dyr'),
+    words: [
+      w('Moose', 'Elg'),
+      w('Penguin', 'Pingvin'),
+      w('Seagull', 'Måke'),
+      w('Octopus', 'Blekksprut'),
+      w('Reindeer', 'Reinsdyr'),
+      w('Hedgehog', 'Pinnsvin'),
+      w('Shark', 'Hai'),
+      w('Giraffe', 'Sjiraff'),
+      w('Owl', 'Ugle'),
+      w('Squirrel', 'Ekorn'),
+      w('Lobster', 'Hummer'),
+      w('Polar bear', 'Isbjørn'),
+    ],
+  },
+  {
+    name: w('Places', 'Steder'),
+    words: [
+      w('Airport', 'Flyplass'),
+      w('Sauna', 'Badstue'),
+      w('Ski lift', 'Skiheis'),
+      w('Cinema', 'Kino'),
+      w('Dentist', 'Tannlegekontor'),
+      w('Ferry', 'Ferje'),
+      w('Gym', 'Treningssenter'),
+      w('Library', 'Bibliotek'),
+      w('Cabin', 'Hytte'),
+      w('Night club', 'Nattklubb'),
+      w('Hospital', 'Sykehus'),
+      w('Petrol station', 'Bensinstasjon'),
+    ],
+  },
+  {
+    name: w('At the bar', 'På baren'),
+    words: [
+      w('Karaoke', 'Karaoke'),
+      w('Bartender', 'Bartender'),
+      w('Darts', 'Dart'),
+      w('Jukebox', 'Jukeboks'),
+      w('Coaster', 'Ølbrikke'),
+      w('Quiz night', 'Quizkveld'),
+      w('Last call', 'Siste bestilling'),
+      w('Peanuts', 'Peanøtter'),
+      w('Terrace', 'Uteservering'),
+      w('Coat check', 'Garderobe'),
+      w('Dance floor', 'Dansegulv'),
+      w('Taxi queue', 'Taxikø'),
+    ],
+  },
+  {
+    name: w('Jobs', 'Yrker'),
+    words: [
+      w('Pilot', 'Pilot'),
+      w('Hairdresser', 'Frisør'),
+      w('Plumber', 'Rørlegger'),
+      w('Teacher', 'Lærer'),
+      w('Chef', 'Kokk'),
+      w('Lifeguard', 'Badevakt'),
+      w('Astronaut', 'Astronaut'),
+      w('Bus driver', 'Bussjåfør'),
+      w('Vet', 'Dyrlege'),
+      w('Firefighter', 'Brannkonstabel'),
+      w('Magician', 'Tryllekunstner'),
+      w('Postman', 'Postbud'),
+    ],
+  },
+  {
+    name: w('Hobbies', 'Hobbyer'),
+    words: [
+      w('Fishing', 'Fiske'),
+      w('Knitting', 'Strikking'),
+      w('Skiing', 'Skigåing'),
+      w('Yoga', 'Yoga'),
+      w('Gaming', 'Gaming'),
+      w('Climbing', 'Klatring'),
+      w('Baking', 'Baking'),
+      w('Surfing', 'Surfing'),
+      w('Chess', 'Sjakk'),
+      w('Gardening', 'Hagearbeid'),
+      w('Bird watching', 'Fuglekikking'),
+      w('Golf', 'Golf'),
+    ],
+  },
+];
 
-type Phase = 'roles' | 'clues' | 'vote' | 'reveal';
+type Phase = 'roles' | 'clues' | 'vote' | 'guess' | 'reveal';
 type State = {
   mode: Mode;
-  words: string[];
-  used: number[];
+  lang: Lang;
+  players: PlayerHandle[];
+  imposters: PlayerHandle[];
+  category: number;
+  word: number;
+  used: string[];
   round: number;
   phase: Phase;
-  players: PlayerHandle[];
-  imposter: PlayerHandle;
-  word: string;
   /** Pass-the-phone: players who have seen their role this round. */
   seen: PlayerHandle[];
   votes: Record<PlayerHandle, PlayerHandle>;
+  /** The imposter caught by the vote, who now guesses the word. */
+  caught: PlayerHandle | null;
+  /** Word choices offered to a caught imposter: indexes in the category. */
+  options: number[];
+  guess: number | null;
+  tally: Record<PlayerHandle, number>;
   scores: Record<PlayerHandle, number>;
-  outcome: { caught: boolean; tally: Record<PlayerHandle, number> } | null;
-};
-
-/** Payload of `vote` and `accuse`: the chosen player. */
-const choice = (payload: Json): { target: PlayerHandle } => {
-  const { target } = fields(payload);
-  if (typeof target !== 'string') invalid('Choose a player in this game.');
-  return { target };
-};
-const inGame = (state: State, target: PlayerHandle) => {
-  if (!state.players.includes(target)) invalid('Choose a player in this game.');
-  return target;
 };
 
 function deal(state: State, random: () => number) {
-  if (state.used.length === state.words.length) state.used = [];
-  const unused = state.words.map((_, i) => i).filter((i) => !state.used.includes(i));
-  const index = unused[Math.floor(random() * unused.length)];
-  state.used.push(index);
-  state.word = state.words[index];
-  state.imposter = state.players[Math.floor(random() * state.players.length)];
+  const fresh: [number, number][] = [];
+  CATEGORIES.forEach((category, c) =>
+    category.words.forEach((_, i) => {
+      if (!state.used.includes(`${c}:${i}`)) fresh.push([c, i]);
+    }),
+  );
+  if (!fresh.length) state.used = [];
+  const pool = fresh.length
+    ? fresh
+    : CATEGORIES.flatMap((c, ci) => c.words.map((_, i) => [ci, i] as [number, number]));
+  const [category, word] = pool[Math.floor(random() * pool.length)];
+  state.category = category;
+  state.word = word;
+  state.used.push(`${category}:${word}`);
+  const count = state.players.length >= 7 ? 2 : 1;
+  state.imposters = shuffled(state.players.length, random)
+    .slice(0, count)
+    .map((index) => state.players[index]);
   state.round += 1;
   state.phase = state.mode === 'pass' ? 'roles' : 'clues';
   state.seen = [];
   state.votes = {};
-  state.outcome = null;
+  state.caught = null;
+  state.options = [];
+  state.guess = null;
+  state.tally = {};
 }
 
-function reveal(state: State, tally: Record<PlayerHandle, number>) {
+/** The vote is in: a single top-voted imposter gets a last chance; otherwise they got away. */
+function judge(state: State, tally: Record<PlayerHandle, number>, random: () => number) {
+  state.tally = tally;
   const top = Math.max(0, ...Object.values(tally));
-  const leaders = Object.keys(tally).filter((handle) => tally[handle] === top);
-  const caught = leaders.length === 1 && leaders[0] === state.imposter;
-  if (caught) {
-    for (const handle of state.players)
-      if (handle !== state.imposter) state.scores[handle] = (state.scores[handle] ?? 0) + 1;
-  } else state.scores[state.imposter] = (state.scores[state.imposter] ?? 0) + 2;
-  state.outcome = { caught, tally };
+  const leaders = Object.keys(tally).filter((p) => tally[p] === top);
+  const accused = leaders.length === 1 ? leaders[0] : null;
+  if (accused && state.imposters.includes(accused)) {
+    state.caught = accused;
+    const others = shuffled(CATEGORIES[state.category].words.length, random).filter(
+      (i) => i !== state.word,
+    );
+    state.options = shuffled(6, random).map((slot) => (slot === 0 ? state.word : others[slot - 1]));
+    state.phase = 'guess';
+    return;
+  }
+  for (const imposter of state.imposters) score(state.scores, imposter, 2);
   state.phase = 'reveal';
 }
 
-function countVotes(state: State) {
+function countVotes(state: State, random: () => number) {
   const tally: Record<PlayerHandle, number> = {};
   for (const voted of Object.values(state.votes)) tally[voted] = (tally[voted] ?? 0) + 1;
-  reveal(state, tally);
+  judge(state, tally, random);
 }
 
 export const game = defineGame({
   setup: ({ players, locale, mode, random }) => {
     const state: State = {
       mode,
-      words: WORDS[locale] ?? WORDS.en,
+      lang: langOf(locale),
+      players: [...players],
+      imposters: [],
+      category: 0,
+      word: 0,
       used: [],
       round: 0,
       phase: 'clues',
-      players: [...players],
-      imposter: players[0],
-      word: '',
       seen: [],
       votes: {},
-      scores: Object.fromEntries(players.map((handle) => [handle, 0])),
-      outcome: null,
+      caught: null,
+      options: [],
+      guess: null,
+      tally: {},
+      scores: zeroScores(players),
     };
     deal(state, random);
     return state;
@@ -132,7 +223,7 @@ export const game = defineGame({
   actions: (action) => ({
     // Pass-the-phone: the holder has read their role and passes the phone on.
     seen: action((state, { playerId }) => {
-      const next = state.players.find((handle) => !state.seen.includes(handle));
+      const next = state.players.find((p) => !state.seen.includes(p));
       if (state.phase !== 'roles' || playerId !== next) invalid('It is not your turn.');
       state.seen.push(next!);
       if (state.seen.length === state.players.length) state.phase = 'clues';
@@ -142,27 +233,43 @@ export const game = defineGame({
       state.phase = 'vote';
     }),
     vote: action({
-      payload: choice,
-      run: (state, { playerId, payload }) => {
-        if (state.phase !== 'vote' || !playerId) invalid('Voting is not open.');
-        const voted = inGame(state, payload.target);
-        if (voted === playerId) invalid('Vote for someone else.');
-        state.votes[playerId] = voted;
-        if (state.players.every((handle) => state.votes[handle])) countVotes(state);
+      payload: target,
+      run: (state, { playerId, payload, random }) => {
+        if (state.phase !== 'vote' || !playerId || state.mode !== 'phones')
+          invalid('Voting is not open.');
+        if (!state.players.includes(payload.target)) invalid('Choose a player in this game.');
+        if (payload.target === playerId) invalid('Vote for someone else.');
+        state.votes[playerId] = payload.target;
+        if (state.players.every((p) => state.votes[p])) countVotes(state, random);
       },
     }),
     // One phone: the group agrees out loud and accuses one player together.
     accuse: action({
-      payload: choice,
-      run: (state, { payload }) => {
+      payload: target,
+      run: (state, { payload, random }) => {
         if (state.phase !== 'vote' || state.mode === 'phones') invalid('Voting is not open.');
-        reveal(state, { [inGame(state, payload.target)]: state.players.length });
+        if (!state.players.includes(payload.target)) invalid('Choose a player in this game.');
+        judge(state, { [payload.target]: state.players.length }, random);
       },
     }),
-    reveal: action((state) => {
+    reveal: action((state, { random }) => {
       if (state.phase !== 'vote') invalid('Voting is not open.');
       if (!Object.keys(state.votes).length) invalid('Nobody has voted yet.');
-      countVotes(state);
+      countVotes(state, random);
+    }),
+    // The caught imposter's last chance: which of these is the word?
+    guessWord: action({
+      payload: option(6),
+      run: (state, { playerId, payload }) => {
+        if (state.phase !== 'guess') invalid('There is nothing to guess.');
+        if (state.mode !== 'shared' && playerId !== state.caught)
+          invalid('Only the caught imposter guesses.');
+        state.guess = state.options[payload.value];
+        if (state.guess === state.word) score(state.scores, state.caught!, 3);
+        else
+          for (const p of state.players) if (!state.imposters.includes(p)) score(state.scores, p);
+        state.phase = 'reveal';
+      },
     }),
     nextRound: action((state, { random }) => {
       if (state.phase !== 'reveal') invalid('Finish this round first.');
@@ -171,35 +278,49 @@ export const game = defineGame({
   }),
   turn: (state) =>
     state.phase === 'roles'
-      ? (state.players.find((handle) => !state.seen.includes(handle)) ?? null)
-      : null,
+      ? (state.players.find((p) => !state.seen.includes(p)) ?? null)
+      : state.phase === 'guess'
+        ? state.caught
+        : null,
   playerLeft: (state, { playerId, random }) => {
-    state.players = state.players.filter((handle) => handle !== playerId);
+    state.players = state.players.filter((p) => p !== playerId);
     delete state.votes[playerId];
     for (const [voter, voted] of Object.entries(state.votes))
       if (voted === playerId) delete state.votes[voter];
-    if (playerId === state.imposter && state.phase !== 'reveal') deal(state, random);
-    else if (state.phase === 'vote' && state.players.every((handle) => state.votes[handle]))
-      countVotes(state);
+    if (state.imposters.includes(playerId) && state.phase !== 'reveal') deal(state, random);
+    else if (state.phase === 'vote' && state.players.every((p) => state.votes[p]))
+      countVotes(state, random);
   },
   view: (state, playerId) => {
-    // The shared screen never shows a role or the word before the reveal.
-    const isImposter = playerId !== null && playerId === state.imposter;
+    const category = CATEGORIES[state.category];
+    const isImposter = playerId !== null && state.imposters.includes(playerId);
     const revealed = state.phase === 'reveal';
+    const guessing = state.phase === 'guess';
+    const guesser =
+      guessing && (playerId === state.caught || (state.mode === 'shared' && playerId === null));
     return {
       mode: state.mode,
       round: state.round,
       phase: state.phase,
       role: playerId === null ? null : isImposter ? ('imposter' as const) : ('crew' as const),
-      word: revealed || (playerId !== null && !isImposter) ? state.word : null,
+      category: category.name[state.lang],
+      word:
+        revealed || (playerId !== null && !isImposter)
+          ? category.words[state.word][state.lang]
+          : null,
+      imposterCount: state.imposters.length,
       voted: Object.keys(state.votes).length,
       yourVote: playerId === null ? null : (state.votes[playerId] ?? null),
+      caught: guessing || revealed ? state.caught : null,
+      options: guesser ? state.options.map((i) => category.words[i][state.lang]) : ([] as string[]),
       scores: state.scores,
       reveal: revealed
         ? {
-            imposter: state.imposter,
-            caught: state.outcome!.caught,
-            tally: state.outcome!.tally,
+            imposters: state.imposters,
+            caught: state.caught,
+            guess: state.guess === null ? null : category.words[state.guess][state.lang],
+            stole: state.guess !== null && state.guess === state.word,
+            tally: state.tally,
           }
         : null,
     };

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { gameClient, useStrings } from '@gaute/games-sdk/react';
 import type { game } from './logic';
-import { Button, Card, Hero, Label, Muted, Page, Scores, Title } from '../_kit/ui';
+import { Awards, Button, Card, Hero, Label, Muted, Page, Scores, Title } from '../_kit/ui';
 import '../_kit/style.css';
 
 const { mountGame, useGame } = gameClient<typeof game>();
@@ -23,6 +23,9 @@ const strings = {
     'The lie': 'The lie',
     Next: 'Next',
     Scores: 'Scores',
+    Titles: 'Titles',
+    masterLiar: 'Master liar',
+    lieDetector: 'Lie detector',
     'Write three short statements.': 'Write three short statements.',
     'Mark which one is the lie.': 'Mark which one is the lie.',
     'It is not your turn.': 'It is not your turn.',
@@ -48,6 +51,9 @@ const strings = {
     'The lie': 'Løgnen',
     Next: 'Neste',
     Scores: 'Poeng',
+    Titles: 'Titler',
+    masterLiar: 'Mesterløgner',
+    lieDetector: 'Løgndetektor',
     'Write three short statements.': 'Skriv tre korte påstander.',
     'Mark which one is the lie.': 'Marker hvilken som er løgnen.',
     'It is not your turn.': 'Det er ikke din tur.',
@@ -144,10 +150,15 @@ function Game() {
       }
       below={
         revealed ? (
-          <Card>
-            <Label>{t('Scores')}</Label>
-            <Scores scores={view.scores} />
-          </Card>
+          <>
+            <Card>
+              <Label>{t('Scores')}</Label>
+              <Scores scores={view.scores} />
+            </Card>
+            {playing ? null : (
+              <Awards awards={view.awards} heading={t('Titles')} title={(key) => t.text(key)} />
+            )}
+          </>
         ) : null
       }
     >

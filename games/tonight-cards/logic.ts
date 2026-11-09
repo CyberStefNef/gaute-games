@@ -11,7 +11,7 @@ import {
 // A shared deck of prompts, duels, votes and rules that last a few cards.
 // Placeholders ({p1}, {p2}) name players; the app fills in display names. On a
 // shared phone, vote cards are answered by pointing rather than voting in the app.
-type Kind = 'prompt' | 'duel' | 'vote' | 'rule';
+type Kind = 'prompt' | 'duel' | 'vote' | 'rule' | 'hotseat' | 'round';
 type Card = { kind: Kind; en: string; nb: string; endEn?: string; endNb?: string };
 
 const CARDS: Card[] = [
@@ -147,6 +147,66 @@ const CARDS: Card[] = [
     nb: 'Alle må kalle {p1} «Kaptein».',
     endEn: '{p1} is no longer the Captain.',
     endNb: '{p1} er ikke lenger kaptein.',
+  },
+  {
+    kind: 'hotseat',
+    en: '{p1} is in the hot seat: everyone asks one question, and {p1} must answer honestly.',
+    nb: '{p1} sitter i den varme stolen: alle stiller ett spørsmål, og {p1} må svare ærlig.',
+  },
+  {
+    kind: 'hotseat',
+    en: '{p1} in the hot seat: the group has one minute to make {p1} laugh.',
+    nb: '{p1} i den varme stolen: gruppa har ett minutt på å få {p1} til å le.',
+  },
+  {
+    kind: 'hotseat',
+    en: 'Everyone says the first word they think of about {p1}. {p1} picks the best one.',
+    nb: 'Alle sier det første ordet de tenker på om {p1}. {p1} velger det beste.',
+  },
+  {
+    kind: 'hotseat',
+    en: 'The group guesses {p1}’s most-used emoji. {p1} reveals it.',
+    nb: 'Gruppa gjetter emojien {p1} bruker mest. {p1} avslører den.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a pizza topping. Repeat one or hesitate and you’re out.',
+    nb: 'Rundt bordet, {p1} begynner: nevn et pizzafyll. Gjentar du eller nøler, er du ute.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a song with a colour in the title.',
+    nb: 'Rundt bordet, {p1} begynner: nevn en sang med en farge i tittelen.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: one word each to build a story. Keep going until someone laughs.',
+    nb: 'Rundt bordet, {p1} begynner: ett ord hver til en historie. Fortsett til noen ler.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a famous duo. The first to get stuck tells an embarrassing story.',
+    nb: 'Rundt bordet, {p1} begynner: nevn en kjent duo. Den første som står fast, forteller en flau historie.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a Norwegian town. No repeats, no hesitating.',
+    nb: 'Rundt bordet, {p1} begynner: nevn et norsk tettsted. Ingen gjentakelser, ingen nøling.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: rock, paper, scissors, best of three. The loser gives the winner a compliment.',
+    nb: '{p1} mot {p2}: stein, saks, papir, best av tre. Taperen gir vinneren et kompliment.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: say “red lorry, yellow lorry” five times fast. Fewest slips wins.',
+    nb: '{p1} mot {p2}: si «Fisker’n Fritz fisket fersk fisk» fem ganger fort. Færrest feil vinner.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: stare at each other. First to blink or laugh loses.',
+    nb: '{p1} mot {p2}: se hverandre i øynene. Den første som blunker eller ler, taper.',
   },
 ];
 

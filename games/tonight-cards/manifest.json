@@ -9,8 +9,8 @@
   "modes": ["phones", "shared"],
   "howToPlay": [
     "Draw a card and do what it says.",
-    "Prompts and duels name players; votes ask the whole group.",
-    "Rule cards stay in play for a few cards."
+    "Prompts, duels and the hot seat name players; round-the-table cards go round the group.",
+    "Votes ask the whole group, and rule cards stay in play for a few cards."
   ],
   "translations": {
     "nb": {
@@ -18,8 +18,8 @@
       "description": "Spørsmål, dueller, avstemninger og tøysete regler.",
       "howToPlay": [
         "Trekk et kort og gjør det som står.",
-        "Spørsmål og dueller nevner spillere; avstemninger spør hele gruppa.",
-        "Regelkort gjelder i noen kort."
+        "Spørsmål, dueller og den varme stolen nevner spillere; rundt-bordet-kort går rundt gruppa.",
+        "Avstemninger spør hele gruppa, og regelkort gjelder i noen kort."
       ]
     }
   }
