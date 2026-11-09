@@ -37,6 +37,17 @@ const BASE = [
 
 const escapeAttribute = (value: string) => value.replace(/[&"<>]/g, (c) => `&#${c.charCodeAt(0)};`);
 
+// Runs before the game's code: the first uncaught error (a crash while loading or
+// drawing) is reported, so the app can offer to try again instead of waiting.
+const REPORT_FAILURE = `(() => {
+  const native = globalThis.ReactNativeWebView;
+  addEventListener('error', (event) => {
+    const message = { gaute: 1, type: 'failed', reason: String(event.message || 'error').slice(0, 200) };
+    if (native) native.postMessage(JSON.stringify(message));
+    else parent.postMessage(message, '*');
+  }, { once: true });
+})();`;
+
 /**
  * A game's page. The app's tokens are inline on <html> from the first paint, with
  * shadcn/ui names, so games using stock shadcn/ui or Tailwind match the app.
@@ -63,6 +74,7 @@ export function gameDocument(
     `<style>${inert(client.style, 'style')}</style>`,
     '</head>',
     '<body><div id="app"></div>',
+    `<script>${REPORT_FAILURE}</script>`,
     `<script>${inert(client.script, 'script')}</script>`,
     '</body></html>',
   ].join('');

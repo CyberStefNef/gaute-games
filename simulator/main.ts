@@ -126,9 +126,8 @@ function snapshot(viewer: string | null): Snapshot {
 const send = (phone: Phone, message: HostMessage) =>
   phone.frame.contentWindow?.postMessage(message, '*');
 
-function apply(outcome: RuntimeOutcome) {
+function apply(game: Played, outcome: RuntimeOutcome) {
   if (!outcome.ok || 'unsupported' in outcome) return;
-  const game = played!;
   game.version += 1;
   game.state = outcome.state;
   game.views = outcome.views;
@@ -200,7 +199,14 @@ function refresh() {
       send(phone, { gaute: PROTOCOL, type: 'update', snapshot: snapshot(phone.viewer()) });
 }
 
-async function act(phone: Phone, id: number, action: string, payload: Json) {
+// Actions run one at a time, like on a phone: each sees the state the previous one
+// left, and a reply for a game restarted meanwhile is dropped.
+let actions: Promise<void> = Promise.resolve();
+function act(phone: Phone, id: number, action: string, payload: Json) {
+  actions = actions.then(() => perform(phone, id, action, payload));
+}
+
+async function perform(phone: Phone, id: number, action: string, payload: Json) {
   const game = played!;
   const actor = game.mode === 'phones' ? phone.viewer() : game.mode === 'pass' ? game.turn : null;
   if (game.ended !== null) {
@@ -218,10 +224,20 @@ async function act(phone: Phone, id: number, action: string, payload: Json) {
       payload,
       seed: (game.seed + game.version * 7919) | 0,
     });
+    if (played !== game) {
+      send(phone, {
+        gaute: PROTOCOL,
+        type: 'result',
+        id,
+        ok: false,
+        reason: 'The game restarted.',
+      });
+      return;
+    }
     const who = game.players.find((p) => p.handle === actor)?.name ?? 'Group';
     if (!outcome.ok) log(`${who}: ${action} ${JSON.stringify(payload)} → ${outcome.reason}`, true);
     else log(`${who}: ${action} ${JSON.stringify(payload)}`);
-    apply(outcome);
+    apply(game, outcome);
     send(phone, {
       gaute: PROTOCOL,
       type: 'result',
@@ -271,7 +287,9 @@ window.addEventListener('message', (event) => {
     });
   } else if (message.type === 'shown') phone.frame.classList.add('shown');
   else if (message.type === 'haptic') log(`haptic: ${message.style}`);
-  else void act(phone, message.id, message.action, message.payload);
+  else if (message.type === 'failed')
+    log(`The page failed before drawing: ${message.reason}`, true);
+  else act(phone, message.id, message.action, message.payload);
 });
 
 function startRules(logic: string) {
