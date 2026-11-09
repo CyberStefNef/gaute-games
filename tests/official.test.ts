@@ -181,3 +181,34 @@ test('Werewolves: the witch saves the victim, and a voted-out hunter takes someo
   expect(game.view('p1').phase).toBe('night');
   expect(game.view(witch).witch).toMatchObject({ heal: false, poison: true });
 });
+
+test('Bluff hides who wrote what until the reveal, and scores the truth and every fooled player', async () => {
+  const players = ['p1', 'p2', 'p3'];
+  const game = await session('bluff', 'phones', players);
+  expect(await game.act('p1', 'write', { text: '' })).toEqual({
+    ok: false,
+    reason: 'Write a short answer.',
+  });
+  await game.act('p1', 'write', { text: 'Pancake' });
+  await game.act('p2', 'write', { text: 'Sausage' });
+  await game.act('p3', 'write', { text: 'Moose' });
+  const options: { text: string; mine: boolean; authors: string[]; truth: boolean }[] =
+    game.view('p1').options;
+  expect(options).toHaveLength(4);
+  // Before the reveal nobody sees authors or the truth, only their own answer.
+  expect(options.every((o) => o.authors.length === 0 && !o.truth)).toBe(true);
+  expect(options.filter((o) => o.mine).map((o) => o.text)).toEqual(['Pancake']);
+  const own = options.findIndex((o) => o.mine);
+  expect(await game.act('p1', 'vote', { value: own })).toEqual({
+    ok: false,
+    reason: 'That’s your own answer!',
+  });
+  const index = (text: string) => options.findIndex((o) => o.text === text);
+  const truth = options.findIndex((o) => !['Pancake', 'Sausage', 'Moose'].includes(o.text));
+  await game.act('p1', 'vote', { value: truth });
+  await game.act('p2', 'vote', { value: index('Pancake') });
+  await game.act('p3', 'vote', { value: index('Pancake') });
+  expect(game.view('p1').phase).toBe('reveal');
+  // p1 found the truth (2) and fooled two players (2).
+  expect(game.view('p1').scores).toEqual({ p1: 4, p2: 0, p3: 0 });
+});
