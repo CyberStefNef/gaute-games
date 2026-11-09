@@ -1,0 +1,158 @@
+// Messages between a sandboxed game page and the Gaute app. Both sides validate
+// everything they receive: the app never trusts the game, and the game ignores
+// anything malformed.
+import type { Json, Mode, PlayerHandle } from './logic';
+
+export const PROTOCOL = 1;
+export const MESSAGE_LIMIT = 64 * 1024;
+
+export type Player = {
+  handle: PlayerHandle;
+  /** Null when this viewer may not see the name. */
+  name: string | null;
+  host: boolean;
+  left: boolean;
+  you: boolean;
+};
+export type Snapshot = {
+  mode: Mode;
+  status: 'playing' | 'ended';
+  version: number;
+  /** Who is looking: a player, or null for the shared screen on one phone. */
+  you: PlayerHandle | null;
+  players: Player[];
+  /** The view for `you`, exactly as the game's `view` returned it. */
+  view: Json;
+  result: Json;
+  endedReason: string | null;
+};
+/** The app's design tokens, named as in shadcn/ui so its components match the app. */
+export const THEME_COLORS = [
+  'background',
+  'foreground',
+  'card',
+  'cardForeground',
+  'popover',
+  'popoverForeground',
+  'primary',
+  'primaryForeground',
+  'secondary',
+  'secondaryForeground',
+  'muted',
+  'mutedForeground',
+  'accent',
+  'accentForeground',
+  'destructive',
+  'destructiveForeground',
+  'border',
+  'input',
+  'ring',
+] as const;
+export type Theme = {
+  dark: boolean;
+  colors: Record<(typeof THEME_COLORS)[number], string>;
+  /** Corner radius as a CSS length, like shadcn/ui's `--radius`. */
+  radius: string;
+};
+export type Haptic = 'selection' | 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
+const HAPTICS: readonly Haptic[] = [
+  'selection',
+  'light',
+  'medium',
+  'heavy',
+  'success',
+  'warning',
+  'error',
+];
+
+/** CSS custom properties for a theme: `--background`, `--card-foreground`, `--radius`, … */
+export function themeVariables(theme: Theme): Record<string, string> {
+  const variables: Record<string, string> = { '--radius': theme.radius };
+  for (const name of THEME_COLORS)
+    variables['--' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())] = theme.colors[name];
+  return variables;
+}
+
+export type HostMessage =
+  | { gaute: typeof PROTOCOL; type: 'init'; locale: string; theme: Theme; snapshot: Snapshot }
+  | { gaute: typeof PROTOCOL; type: 'update'; snapshot: Snapshot }
+  | { gaute: typeof PROTOCOL; type: 'theme'; theme: Theme }
+  | { gaute: typeof PROTOCOL; type: 'result'; id: number; ok: boolean; reason?: string };
+
+export type GameMessage =
+  | { gaute: typeof PROTOCOL; type: 'ready' }
+  /** The first state has been drawn; the app reveals the page now. */
+  | { gaute: typeof PROTOCOL; type: 'shown' }
+  | { gaute: typeof PROTOCOL; type: 'act'; id: number; action: string; payload: Json }
+  | { gaute: typeof PROTOCOL; type: 'haptic'; style: Haptic };
+
+const record = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+function decode(raw: unknown): Record<string, unknown> | null {
+  if (typeof raw === 'string') {
+    if (raw.length > MESSAGE_LIMIT) return null;
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  return record(raw) && raw.gaute === PROTOCOL && typeof raw.type === 'string' ? raw : null;
+}
+
+/** Validates a message from a game. Returns null for anything unexpected. */
+export function parseGameMessage(raw: unknown): GameMessage | null {
+  const message = decode(raw);
+  if (!message) return null;
+  if (message.type === 'ready') return { gaute: PROTOCOL, type: 'ready' };
+  if (message.type === 'shown') return { gaute: PROTOCOL, type: 'shown' };
+  if (message.type === 'haptic')
+    return HAPTICS.includes(message.style as Haptic)
+      ? { gaute: PROTOCOL, type: 'haptic', style: message.style as Haptic }
+      : null;
+  if (
+    message.type === 'act' &&
+    Number.isSafeInteger(message.id) &&
+    typeof message.action === 'string' &&
+    /^[A-Za-z][\w-]{0,63}$/.test(message.action)
+  ) {
+    let payload: string | undefined;
+    try {
+      payload = JSON.stringify(message.payload ?? null);
+    } catch {
+      return null;
+    }
+    if (!payload || payload.length > 16 * 1024) return null;
+    return {
+      gaute: PROTOCOL,
+      type: 'act',
+      id: message.id as number,
+      action: message.action,
+      payload: JSON.parse(payload) as Json,
+    };
+  }
+  return null;
+}
+
+/** Validates a message from the Gaute app. Returns null for anything unexpected. */
+export function parseHostMessage(raw: unknown): HostMessage | null {
+  const message = decode(raw);
+  if (!message) return null;
+  switch (message.type) {
+    case 'init':
+      return typeof message.locale === 'string' && record(message.theme) && record(message.snapshot)
+        ? (message as HostMessage)
+        : null;
+    case 'update':
+      return record(message.snapshot) ? (message as HostMessage) : null;
+    case 'theme':
+      return record(message.theme) ? (message as HostMessage) : null;
+    case 'result':
+      return Number.isSafeInteger(message.id) && typeof message.ok === 'boolean'
+        ? (message as HostMessage)
+        : null;
+    default:
+      return null;
+  }
+}

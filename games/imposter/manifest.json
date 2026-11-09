@@ -1,0 +1,17 @@
+{
+  "slug": "imposter",
+  "version": 1,
+  "name": "Imposter",
+  "description": "Everyone gets the secret word except one player. Give clues out loud, then vote for the imposter.",
+  "players": {
+    "min": 3,
+    "max": 12
+  },
+  "modes": ["phones", "pass"],
+  "translations": {
+    "nb": {
+      "name": "Imposter",
+      "description": "Alle får det hemmelige ordet unntatt én. Gi hint høyt, og stem på imposteren."
+    }
+  }
+}

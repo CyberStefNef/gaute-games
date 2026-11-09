@@ -1,0 +1,17 @@
+{
+  "slug": "tonight-cards",
+  "version": 1,
+  "name": "Tonight Cards",
+  "description": "A shared deck of prompts, duels, votes and rules that last a few cards.",
+  "players": {
+    "min": 3,
+    "max": 16
+  },
+  "modes": ["phones", "shared"],
+  "translations": {
+    "nb": {
+      "name": "Kveldskort",
+      "description": "En felles kortstokk med spørsmål, dueller, avstemninger og regler som varer noen kort."
+    }
+  }
+}

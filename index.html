@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gaute games simulator</title>
+    <link rel="stylesheet" href="./simulator/simulator.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Gaute games</strong>
+      <label
+        >Game
+        <select id="game"></select
+      ></label>
+      <label
+        >Mode
+        <select id="mode"></select
+      ></label>
+      <label>Players <input id="players" type="number" min="2" max="16" value="4" /></label>
+      <label
+        >Language
+        <select id="locale">
+          <option value="en">English</option>
+          <option value="nb">Norsk bokmål</option>
+        </select></label
+      >
+      <label><input id="dark" type="checkbox" /> Dark</label>
+      <button id="restart">Restart</button>
+    </header>
+    <p id="status" role="status"></p>
+    <main>
+      <section id="phones" aria-label="Phones"></section>
+      <aside>
+        <h2>Log</h2>
+        <ol id="log"></ol>
+      </aside>
+    </main>
+    <script type="module" src="./simulator/main.ts"></script>
+  </body>
+</html>
