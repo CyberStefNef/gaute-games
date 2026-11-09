@@ -10,28 +10,49 @@
     "README.md"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     "./logic": "./sdk/logic.ts",
     "./client": "./sdk/client.ts",
     "./protocol": "./sdk/protocol.ts",
     "./runtime": "./sdk/runtime.ts",
-    "./document": "./sdk/document.ts"
+    "./document": "./sdk/document.ts",
+    "./react": "./sdk/react.tsx",
+    "./tailwind.css": "./sdk/tailwind.css"
   },
   "scripts": {
     "new": "node tools/new.mjs",
-    "dev": "node tools/dev.mjs",
-    "build": "node tools/build.mjs",
-    "check": "node tools/check.mjs",
-    "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck && npm run check"
+    "dev": "vp dev",
+    "build": "vp build",
+    "check": "vp check",
+    "test": "vp test"
   },
   "devDependencies": {
     "@jitl/quickjs-singlefile-mjs-release-sync": "0.32.0",
+    "@tailwindcss/vite": "4.3.3",
     "@types/node": "^24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "quickjs-emscripten-core": "0.32.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
     "vite-plus": "^1.5.1"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@1.5.1",

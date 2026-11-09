@@ -16,4 +16,4 @@ if (existsSync(target)) {
 cpSync(path.join(ROOT, 'template'), target, { recursive: true });
 const manifest = path.join(target, 'manifest.json');
 writeFileSync(manifest, readFileSync(manifest, 'utf8').replace('"my-game"', JSON.stringify(slug)));
-console.log(`Created games/${slug}. Run "npm run dev" and pick it in the simulator.`);
+console.log(`Created games/${slug}. Run "vp dev" and pick it in the simulator.`);

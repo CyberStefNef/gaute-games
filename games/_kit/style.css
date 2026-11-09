@@ -1,0 +1,4 @@
+@import 'tailwindcss';
+@import '@gaute/games-sdk/tailwind.css';
+/* The shared components live here, outside each game's folder. */
+@source './';

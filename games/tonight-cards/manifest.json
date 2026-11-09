@@ -1,6 +1,6 @@
 {
   "slug": "tonight-cards",
-  "version": 1,
+  "version": 2,
   "name": "Tonight Cards",
   "description": "A shared deck of prompts, duels, votes and rules that last a few cards.",
   "players": {

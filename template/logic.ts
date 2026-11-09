@@ -11,6 +11,16 @@ type State = {
   winner: PlayerHandle | null;
 };
 
+/** What one player's page receives; client.tsx imports this type. */
+export type View = {
+  guesses: State['guesses'];
+  yourTurn: boolean;
+  next: PlayerHandle;
+  /** The finder's handle, or 'group' on a shared phone. */
+  winner: PlayerHandle | null;
+  secret: number | null;
+};
+
 defineGame({
   setup: ({ players, mode, random }): State => ({
     mode,
@@ -42,7 +52,7 @@ defineGame({
   // Pass the phone: whose turn it is. Shared and own-phone play ignore this.
   turn: (state: State) => (state.winner ? null : state.players[state.turn % state.players.length]),
   // Everything a player sees. The secret stays out until someone finds it.
-  view: (state: State, playerId) => ({
+  view: (state: State, playerId): View => ({
     guesses: state.guesses,
     yourTurn:
       state.mode === 'shared' ||
