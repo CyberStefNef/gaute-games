@@ -33,8 +33,8 @@ defineGame({
   action; nothing changes. Call `endGame(result)` to finish (JSON, ≤4 KB).
 - **Deterministic and synchronous.** No `Date`, timers, `fetch`, `async`,
   module-level mutable variables or anything outside the arguments. Use `random`
-  (or `Math.random`, which is seeded). Tests replay games and require identical
-  results.
+  (or `Math.random`, which is seeded). An `async` rule is rejected. Tests replay
+  games and require identical states, views, turns and results.
 - **Secrets live only in `state`.** `view` decides what each player receives; the
   page never sees `state`. `view(state, null)` is the shared screen (modes `pass`
   and `shared`) and must hide every secret.

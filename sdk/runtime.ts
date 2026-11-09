@@ -56,9 +56,15 @@ export const RUNTIME_PRELUDE = `"use strict";
     invalid(reason) { throw new Invalid(String(reason)); },
     endGame(result) { ended = { result: result === undefined ? null : result }; },
   };
-  // Used by the checker (tools/check.mjs) to exercise every action.
+  // Used by the checker (tools/sandbox.mjs) to exercise every action.
   globalThis.__describe = () =>
     JSON.stringify({ actions: game && game.actions ? Object.keys(game.actions) : [], turn: !!(game && typeof game.turn === 'function') });
+  // Rules run synchronously: an async function would change state after the result.
+  const sync = (value, what) => {
+    if (value !== null && (typeof value === 'object' || typeof value === 'function') && typeof value.then === 'function')
+      throw new Error(what + ' must not be async');
+    return value;
+  };
   globalThis.__dispatch = (json) => {
     const r = JSON.parse(json);
     if (!game || typeof game.setup !== 'function' || typeof game.view !== 'function' || !game.actions)
@@ -67,28 +73,28 @@ export const RUNTIME_PRELUDE = `"use strict";
     ended = undefined;
     try {
       let state;
-      if (r.op === 'setup') state = game.setup({ players: r.players, locale: r.locale, mode: r.mode, random });
+      if (r.op === 'setup') state = sync(game.setup({ players: r.players, locale: r.locale, mode: r.mode, random }), 'setup');
       else {
         state = JSON.parse(r.state);
         if (r.op === 'leave') {
           if (typeof game.playerLeft !== 'function') return JSON.stringify({ ok: true, unsupported: true });
-          game.playerLeft(state, { playerId: r.playerId, players: r.players, random });
+          sync(game.playerLeft(state, { playerId: r.playerId, players: r.players, random }), 'playerLeft');
         } else {
           if (!Object.prototype.hasOwnProperty.call(game.actions, r.action) || typeof game.actions[r.action] !== 'function')
             throw new Invalid('Unknown action');
-          game.actions[r.action](state, { playerId: r.playerId, payload: r.payload, players: r.players, random });
+          sync(game.actions[r.action](state, { playerId: r.playerId, payload: r.payload, players: r.players, random }), 'Action ' + r.action);
         }
       }
       const stateJson = JSON.stringify(state);
       if (stateJson === undefined) throw new Error('State must be JSON');
       const views = {};
-      const show = (p) => JSON.stringify(game.view(JSON.parse(stateJson), p)) ?? 'null';
+      const show = (p) => JSON.stringify(sync(game.view(JSON.parse(stateJson), p), 'view')) ?? 'null';
       for (const p of r.players) views[p] = show(p);
       if (r.mode !== 'phones') views['${SHARED_VIEW}'] = show(null);
       let turn;
       if (r.mode === 'pass') {
         if (typeof game.turn !== 'function') throw new Error('Pass-the-phone games define turn');
-        turn = game.turn(JSON.parse(stateJson));
+        turn = sync(game.turn(JSON.parse(stateJson)), 'turn');
         if (turn !== null && !r.players.includes(turn)) throw new Error('turn returned an unknown player');
       }
       return JSON.stringify({ ok: true, state: stateJson, views, turn, ended: ended && JSON.stringify(ended.result) });

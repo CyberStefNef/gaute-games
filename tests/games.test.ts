@@ -24,10 +24,11 @@ async function play(game: Game, mode: Mode, count: number, seed: number) {
   const requests: RuntimeRequest[] = [{ op: 'setup', mode, players, locale: 'en', seed }];
   let outcome = (await runGame(game.logic, requests[0])) as Outcome;
   expect(outcome.ok, 'setup must succeed').toBe(true);
-  const states: string[] = [];
+  // Everything a player can observe, so replays compare views and turns too.
+  const outcomes: string[] = [];
   for (let step = 0; step < 150 && outcome.ok && 'state' in outcome; step++) {
     const done = outcome;
-    states.push(done.state);
+    outcomes.push(JSON.stringify([done.state, done.views, done.turn ?? null, done.ended ?? null]));
     for (const player of players)
       expect(done.views[player], `view for ${player}`).toBeTypeOf('string');
     if (mode !== 'phones') expect(done.views['*'], 'shared view').toBeTypeOf('string');
@@ -54,7 +55,7 @@ async function play(game: Game, mode: Mode, count: number, seed: number) {
     const next = (await runGame(game.logic, request)) as Outcome;
     if (next.ok) outcome = next;
   }
-  return { requests, states };
+  return { requests, outcomes };
 }
 
 const games: [string, string][] = [
@@ -69,9 +70,10 @@ describe.each(games)('%s', (name, dir) => {
       for (const count of new Set([game.players.min, Math.min(game.players.max, 5)])) {
         const first = await play(game, mode, count, 7);
         const again = await play(game, mode, count, 7);
-        // Same seed and moves: same states. Logic must not depend on clocks or globals.
-        expect(again.states, `${mode} with ${count} players is deterministic`).toEqual(
-          first.states,
+        // Same seed and moves: same states, views, turns and results. Logic must not
+        // depend on clocks or globals.
+        expect(again.outcomes, `${mode} with ${count} players is deterministic`).toEqual(
+          first.outcomes,
         );
       }
   });

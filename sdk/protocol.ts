@@ -4,7 +4,13 @@
 import type { Json, Mode, PlayerHandle } from './logic';
 
 export const PROTOCOL = 1;
-export const MESSAGE_LIMIT = 64 * 1024;
+/** Largest message a game may send (actions carry at most 16 KB of payload). */
+export const GAME_MESSAGE_LIMIT = 64 * 1024;
+/**
+ * Largest message the app sends. It carries a view (the server allows 64 KB each)
+ * plus players, theme and escaping, and on phones arrives as one string.
+ */
+export const HOST_MESSAGE_LIMIT = 1024 * 1024;
 
 export type Player = {
   handle: PlayerHandle;
@@ -84,14 +90,16 @@ export type GameMessage =
   /** The first state has been drawn; the app reveals the page now. */
   | { gaute: typeof PROTOCOL; type: 'shown' }
   | { gaute: typeof PROTOCOL; type: 'act'; id: number; action: string; payload: Json }
-  | { gaute: typeof PROTOCOL; type: 'haptic'; style: Haptic };
+  | { gaute: typeof PROTOCOL; type: 'haptic'; style: Haptic }
+  /** The page threw before its first render; the app offers to try again. */
+  | { gaute: typeof PROTOCOL; type: 'failed'; reason: string };
 
 const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-function decode(raw: unknown): Record<string, unknown> | null {
+function decode(raw: unknown, limit: number): Record<string, unknown> | null {
   if (typeof raw === 'string') {
-    if (raw.length > MESSAGE_LIMIT) return null;
+    if (raw.length > limit) return null;
     try {
       raw = JSON.parse(raw);
     } catch {
@@ -103,10 +111,16 @@ function decode(raw: unknown): Record<string, unknown> | null {
 
 /** Validates a message from a game. Returns null for anything unexpected. */
 export function parseGameMessage(raw: unknown): GameMessage | null {
-  const message = decode(raw);
+  const message = decode(raw, GAME_MESSAGE_LIMIT);
   if (!message) return null;
   if (message.type === 'ready') return { gaute: PROTOCOL, type: 'ready' };
   if (message.type === 'shown') return { gaute: PROTOCOL, type: 'shown' };
+  if (message.type === 'failed')
+    return {
+      gaute: PROTOCOL,
+      type: 'failed',
+      reason: typeof message.reason === 'string' ? message.reason.slice(0, 200) : '',
+    };
   if (message.type === 'haptic')
     return HAPTICS.includes(message.style as Haptic)
       ? { gaute: PROTOCOL, type: 'haptic', style: message.style as Haptic }
@@ -137,7 +151,7 @@ export function parseGameMessage(raw: unknown): GameMessage | null {
 
 /** Validates a message from the Gaute app. Returns null for anything unexpected. */
 export function parseHostMessage(raw: unknown): HostMessage | null {
-  const message = decode(raw);
+  const message = decode(raw, HOST_MESSAGE_LIMIT);
   if (!message) return null;
   switch (message.type) {
     case 'init':
