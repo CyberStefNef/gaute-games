@@ -7,8 +7,8 @@
 
 CI repeats the checks. A maintainer then plays the game and reviews the code and
 content. Merged games are signed and published automatically and appear in Gaute
-within minutes. To change a published game, open another pull request and bump
-`version`.
+within minutes. To change a published game, open another pull request. Each build
+is identified by a hash of its code, so there is no version number to bump.
 
 ## Content rules
 

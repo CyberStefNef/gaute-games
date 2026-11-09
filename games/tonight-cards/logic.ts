@@ -122,9 +122,9 @@ const CARDS: Card[] = [
   },
   {
     kind: 'rule',
-    en: 'Nobody may say "yes" or "no".',
+    en: 'Nobody may say “yes” or “no”.',
     nb: 'Ingen får si «ja» eller «nei».',
-    endEn: 'You can say "yes" and "no" again.',
+    endEn: 'You can say “yes” and “no” again.',
     endNb: 'Dere kan si «ja» og «nei» igjen.',
   },
   {
@@ -143,7 +143,7 @@ const CARDS: Card[] = [
   },
   {
     kind: 'rule',
-    en: 'Everyone must call {p1} "Captain".',
+    en: 'Everyone must call {p1} “Captain”.',
     nb: 'Alle må kalle {p1} «Kaptein».',
     endEn: '{p1} is no longer the Captain.',
     endNb: '{p1} er ikke lenger kaptein.',
