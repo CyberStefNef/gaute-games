@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { ViewOf } from '@gaute/games-sdk/logic';
 import { gameClient, useStrings } from '@gaute/games-sdk/react';
 import type { game } from './logic';
@@ -60,8 +61,19 @@ function CardText({ text, refs }: { text: string; refs: Refs }) {
 }
 
 function Game() {
-  const { view, players, act, playing } = useGame();
+  const { view, players, act, playing, gaute } = useGame();
   const t = useStrings({ en, nb });
+  // Gaute waves at a new rule, and celebrates the vote results and the last card.
+  const moment = view.finished
+    ? 'celebrate'
+    : view.vote?.tally
+      ? 'celebrate'
+      : view.card.kind === 'rule' && !view.card.ending
+        ? 'wave'
+        : null;
+  useEffect(() => {
+    if (moment) gaute(moment);
+  }, [moment, view.drawn, gaute]);
   const present = players.filter((player) => !player.left).map((player) => player.handle);
   const vote = view.vote;
   const open = vote !== null && vote.tally === null;
