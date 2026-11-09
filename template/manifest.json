@@ -1,6 +1,5 @@
 {
   "slug": "my-game",
-  "version": 1,
   "name": "Higher or Lower",
   "description": "Guess the secret number between 1 and 100. Each guess tells you higher or lower.",
   "players": { "min": 2, "max": 8 },

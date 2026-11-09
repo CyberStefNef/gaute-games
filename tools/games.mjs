@@ -30,8 +30,6 @@ export function readManifest(slug, dir = path.join(ROOT, 'games', slug)) {
   const problems = [];
   if (!/^[a-z][a-z0-9-]{1,39}$/.test(slug)) problems.push('folder name must be a lowercase slug');
   if (value.slug !== slug) problems.push(`"slug" must be "${slug}"`);
-  if (!Number.isSafeInteger(value.version) || value.version < 1)
-    problems.push('"version" must be a positive integer');
   if (!text(value.name, 40)) problems.push('"name" must be 1–40 characters');
   if (!text(value.description, 200)) problems.push('"description" must be 1–200 characters');
   const { min, max } = value.players ?? {};
@@ -57,7 +55,6 @@ export function readManifest(slug, dir = path.join(ROOT, 'games', slug)) {
   if (problems.length) throw Error(`games/${slug}/manifest.json: ${problems.join('; ')}`);
   return {
     slug,
-    version: value.version,
     name: value.name,
     description: value.description,
     players: { min, max },
@@ -105,7 +102,10 @@ async function bundle(dir, entry, { page = false } = {}) {
   };
 }
 
-/** Builds one game: logic for the sandbox, client page script and style, and a version hash. */
+/**
+ * Builds one game: logic for the sandbox, client page script and style, and the
+ * content hash that identifies this version.
+ */
 export async function bundleGame(slug, folder = path.join(ROOT, 'games', slug)) {
   const dir = path.resolve(folder);
   const manifest = readManifest(slug, dir);
