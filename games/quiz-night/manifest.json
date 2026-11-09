@@ -2,11 +2,15 @@
   "slug": "quiz-night",
   "name": "Quiz Night",
   "description": "Ten questions. Who knows the most?",
-  "players": { "min": 2, "max": 16 },
+  "players": {
+    "min": 2,
+    "max": 16
+  },
   "modes": ["phones", "shared"],
   "howToPlay": [
-    "Each round has ten multiple-choice questions.",
-    "On your own phones, everyone answers privately and scores a point for each right answer.",
+    "Ten multiple-choice questions from mixed categories.",
+    "On your own phones: a right answer scores 1, the first right answer 1 more, and three in a row 1 more.",
+    "Double down to score twice as much, but lose a point if you’re wrong.",
     "On one phone, agree on an answer and play as a team."
   ],
   "translations": {
@@ -14,8 +18,9 @@
       "name": "Quizkveld",
       "description": "Ti spørsmål. Hvem vet mest?",
       "howToPlay": [
-        "Hver runde har ti spørsmål med svaralternativer.",
-        "På egne telefoner svarer alle i skjul og får ett poeng per riktig svar.",
+        "Ti spørsmål med svaralternativer fra ulike kategorier.",
+        "På egne telefoner: riktig svar gir 1 poeng, det første riktige svaret 1 til, og tre på rad 1 til.",
+        "Dobbelt eller ingenting gir dobbelt så mye, men koster ett poeng hvis du tar feil.",
         "På én telefon blir dere enige om et svar og spiller som et lag."
       ]
     }

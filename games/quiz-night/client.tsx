@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { gameClient, useStrings } from '@gaute/games-sdk/react';
 import type { game } from './logic';
-import { Button, Card, Hero, Label, Muted, Page, Scores, Title } from '../_kit/ui';
+import { Awards, Button, Card, Hero, Label, Muted, Page, Scores, Title } from '../_kit/ui';
 import '../_kit/style.css';
 
 const { mountGame, useGame } = gameClient<typeof game>();
@@ -9,12 +10,21 @@ const strings = {
   en: {
     'Question {n} of {total}': 'Question {n} of {total}',
     '{count} of {total} answered': '{count} of {total} answered',
+    'Double down': 'Double down',
+    'Right: double points. Wrong: −1.': 'Right: double points. Wrong: −1.',
+    '{n} in a row': '{n} in a row',
     'Reveal now': 'Reveal now',
     Next: 'Next',
     'See results': 'See results',
     Scores: 'Scores',
+    Titles: 'Titles',
     'Team score: {n}': 'Team score: {n}',
+    fastest: 'fastest',
+    brainiac: 'Brainiac',
+    speedster: 'Speedster',
+    gambler: 'Gambler',
     'Wait for the next question.': 'Wait for the next question.',
+    'You have answered.': 'You have answered.',
     'Nobody has answered yet.': 'Nobody has answered yet.',
     'Answer first.': 'Answer first.',
     'Choose one of the options.': 'Choose one of the options.',
@@ -22,12 +32,21 @@ const strings = {
   nb: {
     'Question {n} of {total}': 'Spørsmål {n} av {total}',
     '{count} of {total} answered': '{count} av {total} har svart',
+    'Double down': 'Dobbelt eller ingenting',
+    'Right: double points. Wrong: −1.': 'Riktig: dobbelt poeng. Feil: −1.',
+    '{n} in a row': '{n} på rad',
     'Reveal now': 'Vis svaret',
     Next: 'Neste',
     'See results': 'Se resultatet',
     Scores: 'Poeng',
+    Titles: 'Titler',
     'Team score: {n}': 'Lagets poeng: {n}',
+    fastest: 'raskest',
+    brainiac: 'Geni',
+    speedster: 'Lynrask',
+    gambler: 'Gambler',
     'Wait for the next question.': 'Vent på neste spørsmål.',
+    'You have answered.': 'Du har svart.',
     'Nobody has answered yet.': 'Ingen har svart ennå.',
     'Answer first.': 'Svar først.',
     'Choose one of the options.': 'Velg et av alternativene.',
@@ -37,9 +56,12 @@ const strings = {
 function Game() {
   const { view, players, name, act, playing, busy } = useGame();
   const t = useStrings(strings);
+  const [double, setDouble] = useState(false);
   const phones = view.mode === 'phones';
   const present = players.filter((player) => !player.left).length;
   const last = view.number === view.total;
+  const answered = view.yourAnswer !== null;
+  const gains = Object.entries(view.gains).sort((a, b) => b[1].points - a[1].points);
   return (
     <Page
       translate={t.text}
@@ -53,20 +75,29 @@ function Game() {
         ) : null
       }
       below={
-        phones && view.revealed ? (
-          <Card>
-            <Label>{t('Scores')}</Label>
-            <Scores scores={view.scores} />
-          </Card>
-        ) : !phones && view.revealed ? (
-          <p className="text-center font-semibold">
-            {t('Team score: {n}', { n: view.groupScore })}
-          </p>
+        view.revealed ? (
+          phones ? (
+            <>
+              <Card>
+                <Label>{t('Scores')}</Label>
+                <Scores scores={view.scores} />
+              </Card>
+              {playing ? null : (
+                <Awards awards={view.awards} heading={t('Titles')} title={(key) => t.text(key)} />
+              )}
+            </>
+          ) : (
+            <p className="text-center font-semibold">
+              {t('Team score: {n}', { n: view.groupScore })}
+            </p>
+          )
         ) : null
       }
     >
       <Hero>
-        <Label>{t('Question {n} of {total}', { n: view.number, total: view.total })}</Label>
+        <Label aside={view.yourStreak >= 2 ? t('{n} in a row', { n: view.yourStreak }) : null}>
+          {view.category} · {t('Question {n} of {total}', { n: view.number, total: view.total })}
+        </Label>
         <Title>{view.question}</Title>
         <div className="grid w-full gap-2">
           {view.options.map((text, index) => {
@@ -80,8 +111,8 @@ function Game() {
               <button
                 key={index}
                 type="button"
-                disabled={view.revealed || busy || !playing}
-                onClick={() => act('answer', { value: index })}
+                disabled={view.revealed || answered || busy || !playing}
+                onClick={() => act('answer', { value: index, double })}
                 className={`flex min-h-14 flex-col justify-center rounded-xl border-2 px-4 py-2 text-left font-semibold ${
                   right
                     ? 'border-primary bg-primary text-primary-foreground'
@@ -100,10 +131,44 @@ function Game() {
             );
           })}
         </div>
+        {!view.revealed && !answered ? (
+          <button
+            type="button"
+            aria-pressed={double}
+            onClick={() => setDouble(!double)}
+            className={`w-full rounded-xl border-2 px-4 py-2.5 text-left ${
+              double
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-dashed border-border'
+            }`}
+          >
+            <span className="block font-bold">{t('Double down')} ×2</span>
+            <span className="block text-sm opacity-80">
+              {t('Right: double points. Wrong: −1.')}
+            </span>
+          </button>
+        ) : null}
         {phones && !view.revealed ? (
           <Muted>
             {t('{count} of {total} answered', { count: view.answered, total: present })}
           </Muted>
+        ) : null}
+        {view.revealed && gains.length ? (
+          <div className="flex flex-wrap justify-center gap-2">
+            {gains.map(([player, gain]) => (
+              <span
+                key={player}
+                className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                  gain.points > 0
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {name(player)} {gain.points > 0 ? `+${gain.points}` : gain.points}
+                {gain.fastest ? ` · ${t('fastest')}` : ''}
+              </span>
+            ))}
+          </div>
         ) : null}
       </Hero>
     </Page>
