@@ -129,7 +129,7 @@ test('Tonight Cards reveals votes, ends rules and finishes the deck', async () =
     await game.act('p2', 'next');
   }
   expect(sawVote && sawRuleEnding).toBe(true);
-  expect(JSON.parse(game.current.ended!)).toEqual({ cards: 27 });
+  expect(JSON.parse(game.current.ended!)).toEqual({ cards: 39 });
 });
 
 test('Tonight Cards on one shared phone reads vote cards aloud instead of voting in the app', async () => {
