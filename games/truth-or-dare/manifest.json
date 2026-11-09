@@ -1,0 +1,23 @@
+{
+  "slug": "truth-or-dare",
+  "name": "Truth or Dare",
+  "description": "Answer honestly or take on a challenge.",
+  "players": { "min": 2, "max": 16 },
+  "modes": ["pass", "shared"],
+  "howToPlay": [
+    "On your turn, choose truth or dare.",
+    "Answer the question or do the dare, then tap Done.",
+    "Skip if it’s too much. The turn moves on either way."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Sannhet eller konsekvens",
+      "description": "Svar ærlig eller ta en utfordring.",
+      "howToPlay": [
+        "Når det er din tur, velger du sannhet eller konsekvens.",
+        "Svar på spørsmålet eller gjør utfordringen, og trykk Ferdig.",
+        "Hopp over hvis det blir for mye. Turen går videre uansett."
+      ]
+    }
+  }
+}
