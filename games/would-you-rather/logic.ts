@@ -1,197 +1,329 @@
-import { defineGame, endGame, invalid, type Mode, type PlayerHandle } from '@gaute/games-sdk/logic';
-import { langOf, option, shuffled, type Lang, type Text } from '../_kit/rules';
+import {
+  defineGame,
+  endGame,
+  fields,
+  invalid,
+  type Json,
+  type Mode,
+  type PlayerHandle,
+} from '@gaute/games-sdk/logic';
+import { awards, count, langOf, option, shuffled, type Lang, type Text } from '../_kit/rules';
 
-// Two options, one choice. On own phones everyone picks privately and the split
-// is revealed with names; on one phone the group argues it out loud.
-const DILEMMAS: [Text, Text][] = [
-  [
-    { en: 'Always be 10 minutes late', nb: 'Alltid komme 10 minutter for sent' },
-    { en: 'Always be 20 minutes early', nb: 'Alltid komme 20 minutter for tidlig' },
-  ],
-  [
-    { en: 'Only drink coffee for a year', nb: 'Bare drikke kaffe i et år' },
-    { en: 'Only drink tea for a year', nb: 'Bare drikke te i et år' },
-  ],
-  [
-    { en: 'Live without music', nb: 'Leve uten musikk' },
-    { en: 'Live without films and series', nb: 'Leve uten filmer og serier' },
-  ],
-  [
-    { en: 'Be able to fly', nb: 'Kunne fly' },
-    { en: 'Be invisible', nb: 'Være usynlig' },
-  ],
-  [
-    { en: 'Have summer all year', nb: 'Ha sommer hele året' },
-    { en: 'Have winter all year', nb: 'Ha vinter hele året' },
-  ],
-  [
-    { en: 'Speak every language', nb: 'Snakke alle språk' },
-    { en: 'Play every instrument', nb: 'Spille alle instrumenter' },
-  ],
-  [
-    { en: 'Give up your phone for a month', nb: 'Gi fra deg mobilen i en måned' },
-    { en: 'Give up cheese for a year', nb: 'Droppe ost i et år' },
-  ],
-  [
-    { en: 'Live in a big city', nb: 'Bo i en storby' },
-    { en: 'Live in a cabin in the mountains', nb: 'Bo på en hytte på fjellet' },
-  ],
-  [
-    { en: 'Know how you will die', nb: 'Vite hvordan du skal dø' },
-    { en: 'Know when you will die', nb: 'Vite når du skal dø' },
-  ],
-  [
-    { en: 'Always say what you think', nb: 'Alltid si hva du tenker' },
-    { en: 'Never speak again', nb: 'Aldri snakke igjen' },
-  ],
-  [
-    { en: 'Travel to the past', nb: 'Reise til fortiden' },
-    { en: 'Travel to the future', nb: 'Reise til fremtiden' },
-  ],
-  [
-    { en: 'Have a personal chef', nb: 'Ha en privat kokk' },
-    { en: 'Have a personal driver', nb: 'Ha en privat sjåfør' },
-  ],
-  [
-    { en: 'Be famous', nb: 'Være kjent' },
-    { en: 'Be rich and unknown', nb: 'Være rik og ukjent' },
-  ],
-  [
-    { en: 'Eat pizza every day', nb: 'Spise pizza hver dag' },
-    { en: 'Never eat pizza again', nb: 'Aldri spise pizza igjen' },
-  ],
-  [
-    { en: 'Have no internet for a month', nb: 'Være uten internett i en måned' },
-    { en: 'Have no hot water for a month', nb: 'Være uten varmtvann i en måned' },
-  ],
-  [
-    { en: 'Read minds', nb: 'Lese tanker' },
-    { en: 'See the future', nb: 'Se inn i fremtiden' },
-  ],
-  [
-    { en: 'Sing every time you speak', nb: 'Synge hver gang du snakker' },
-    { en: 'Dance every time you walk', nb: 'Danse hver gang du går' },
-  ],
-  [
-    { en: 'Be the funniest person in the room', nb: 'Være den morsomste i rommet' },
-    { en: 'Be the smartest person in the room', nb: 'Være den smarteste i rommet' },
-  ],
-  [
-    { en: 'Go on holiday to the beach', nb: 'Dra på strandferie' },
-    { en: 'Go on holiday to the mountains', nb: 'Dra på fjellferie' },
-  ],
-  [
-    { en: 'Have a rewind button for your life', nb: 'Ha en spol-tilbake-knapp for livet' },
-    { en: 'Have a pause button for your life', nb: 'Ha en pauseknapp for livet' },
-  ],
-  [
-    { en: 'Only be able to whisper', nb: 'Bare kunne hviske' },
-    { en: 'Only be able to shout', nb: 'Bare kunne rope' },
-  ],
-  [
-    { en: 'Live without social media', nb: 'Leve uten sosiale medier' },
-    { en: 'Live without takeaway food', nb: 'Leve uten takeaway' },
-  ],
-  [
-    { en: 'Have a dog', nb: 'Ha hund' },
-    { en: 'Have a cat', nb: 'Ha katt' },
-  ],
-  [
-    { en: 'Win the lottery', nb: 'Vinne i lotto' },
-    { en: 'Live twice as long', nb: 'Leve dobbelt så lenge' },
-  ],
-  [
-    { en: 'Be stuck in a lift with your boss', nb: 'Sitte fast i en heis med sjefen din' },
-    { en: 'Be stuck in a lift with your ex', nb: 'Sitte fast i en heis med eksen din' },
-  ],
-  [
-    { en: 'Wake up at 5 every day', nb: 'Våkne klokka 5 hver dag' },
-    { en: 'Go to bed at 9 every day', nb: 'Legge deg klokka 21 hver dag' },
-  ],
-  [
-    { en: 'Have unlimited free flights', nb: 'Ha ubegrenset med gratis flyreiser' },
-    { en: 'Have unlimited free food', nb: 'Ha ubegrenset med gratis mat' },
-  ],
-  [
-    { en: 'Talk to animals', nb: 'Snakke med dyr' },
-    { en: 'Talk to plants', nb: 'Snakke med planter' },
-  ],
-  [
-    { en: 'Be a famous athlete', nb: 'Være en kjent idrettsutøver' },
-    { en: 'Be a famous musician', nb: 'Være en kjent musiker' },
-  ],
-  [
-    { en: 'Always have to sneeze', nb: 'Alltid måtte nyse' },
-    { en: 'Always have hiccups', nb: 'Alltid ha hikke' },
-  ],
+// Two options, one choice. On own phones everyone picks privately and also
+// predicts what most will pick: a right prediction scores. Anyone alone on their
+// side has to defend it. On one phone the group argues it out loud.
+type Pack = { name: Text; hint: Text; dilemmas: [Text, Text][] };
+const x = (en: string, nb: string): Text => ({ en, nb });
+const PER_GAME = 12;
+
+const PACKS: Pack[] = [
+  {
+    name: x('Silly', 'Tullete'),
+    hint: x('Absurd choices, easy laughs', 'Absurde valg, lette latter'),
+    dilemmas: [
+      [
+        x('Sing every time you speak', 'Synge hver gang du snakker'),
+        x('Dance every time you walk', 'Danse hver gang du går'),
+      ],
+      [
+        x('Only be able to whisper', 'Bare kunne hviske'),
+        x('Only be able to shout', 'Bare kunne rope'),
+      ],
+      [
+        x('Always have to sneeze', 'Alltid måtte nyse'),
+        x('Always have hiccups', 'Alltid ha hikke'),
+      ],
+      [
+        x('Eat pizza every day', 'Spise pizza hver dag'),
+        x('Never eat pizza again', 'Aldri spise pizza igjen'),
+      ],
+      [
+        x('Have fingers as long as your legs', 'Ha fingre like lange som beina'),
+        x('Have legs as short as your fingers', 'Ha bein like korte som fingrene'),
+      ],
+      [x('Talk to animals', 'Snakke med dyr'), x('Talk to plants', 'Snakke med planter')],
+      [
+        x('Have a rewind button for your life', 'Ha en spol-tilbake-knapp for livet'),
+        x('Have a pause button for your life', 'Ha en pauseknapp for livet'),
+      ],
+      [
+        x('Wear clown shoes for a year', 'Gå med klovnesko i et år'),
+        x('Wear a clown nose for a year', 'Ha klovnenese i et år'),
+      ],
+      [
+        x('Fight one horse-sized duck', 'Slåss mot én and på størrelse med en hest'),
+        x('Fight a hundred duck-sized horses', 'Slåss mot hundre hester på størrelse med ender'),
+      ],
+      [
+        x(
+          'Have a personal theme song that plays when you enter a room',
+          'Ha en egen kjenningsmelodi når du går inn i et rom',
+        ),
+        x('Have a laugh track after everything you say', 'Ha latterspor etter alt du sier'),
+      ],
+      [
+        x('Be stuck in a lift with your boss', 'Sitte fast i en heis med sjefen din'),
+        x('Be stuck in a lift with your ex', 'Sitte fast i en heis med eksen din'),
+      ],
+      [
+        x('Only eat brown cheese for a week', 'Bare spise brunost i en uke'),
+        x('Only eat fish balls for a week', 'Bare spise fiskeboller i en uke'),
+      ],
+      [x('Have a dog', 'Ha hund'), x('Have a cat', 'Ha katt')],
+      [
+        x('Always be 10 minutes late', 'Alltid komme 10 minutter for sent'),
+        x('Always be 20 minutes early', 'Alltid komme 20 minutter for tidlig'),
+      ],
+    ],
+  },
+  {
+    name: x('Life', 'Livet'),
+    hint: x('Real choices you’ll argue about', 'Ekte valg dere vil krangle om'),
+    dilemmas: [
+      [
+        x('Live in a big city', 'Bo i en storby'),
+        x('Live in a cabin in the mountains', 'Bo på en hytte på fjellet'),
+      ],
+      [
+        x('Have summer all year', 'Ha sommer hele året'),
+        x('Have winter all year', 'Ha vinter hele året'),
+      ],
+      [x('Be famous', 'Være kjent'), x('Be rich and unknown', 'Være rik og ukjent')],
+      [
+        x('Travel to the past', 'Reise til fortiden'),
+        x('Travel to the future', 'Reise til fremtiden'),
+      ],
+      [
+        x('Always say what you think', 'Alltid si hva du tenker'),
+        x('Never speak again', 'Aldri snakke igjen'),
+      ],
+      [
+        x('Live without music', 'Leve uten musikk'),
+        x('Live without films and series', 'Leve uten filmer og serier'),
+      ],
+      [
+        x('Give up your phone for a month', 'Gi fra deg mobilen i en måned'),
+        x('Give up cheese for a year', 'Droppe ost i et år'),
+      ],
+      [
+        x('Have unlimited free flights', 'Ha ubegrenset med gratis flyreiser'),
+        x('Have unlimited free food', 'Ha ubegrenset med gratis mat'),
+      ],
+      [
+        x('Wake up at 5 every day', 'Våkne klokka 5 hver dag'),
+        x('Go to bed at 9 every day', 'Legge deg klokka 21 hver dag'),
+      ],
+      [
+        x('Be the funniest person in the room', 'Være den morsomste i rommet'),
+        x('Be the smartest person in the room', 'Være den smarteste i rommet'),
+      ],
+      [
+        x('Have a personal chef', 'Ha en privat kokk'),
+        x('Have a personal driver', 'Ha en privat sjåfør'),
+      ],
+      [
+        x('Live without social media', 'Leve uten sosiale medier'),
+        x('Live without takeaway food', 'Leve uten takeaway'),
+      ],
+      [x('Win the lottery', 'Vinne i lotto'), x('Live twice as long', 'Leve dobbelt så lenge')],
+      [
+        x('Go on holiday to the beach', 'Dra på strandferie'),
+        x('Go on holiday to the mountains', 'Dra på fjellferie'),
+      ],
+    ],
+  },
+  {
+    name: x('Impossible', 'Umulige'),
+    hint: x('Both options hurt. Choose anyway.', 'Begge valgene svir. Velg likevel.'),
+    dilemmas: [
+      [
+        x('Know how you will die', 'Vite hvordan du skal dø'),
+        x('Know when you will die', 'Vite når du skal dø'),
+      ],
+      [x('Read minds', 'Lese tanker'), x('See the future', 'Se inn i fremtiden')],
+      [
+        x('Lose all your photos', 'Miste alle bildene dine'),
+        x('Lose all your messages', 'Miste alle meldingene dine'),
+      ],
+      [
+        x('Have everyone hear your thoughts for a day', 'La alle høre tankene dine i én dag'),
+        x('Have your browser history made public', 'Få nettleserhistorikken din publisert'),
+      ],
+      [
+        x('Never be able to lie', 'Aldri kunne lyve'),
+        x('Never be able to tell when others lie', 'Aldri merke når andre lyver'),
+      ],
+      [
+        x(
+          'Restart your life at 10 with what you know now',
+          'Starte livet på nytt som tiåring med det du vet nå',
+        ),
+        x('Skip ahead ten years', 'Hoppe ti år fram i tid'),
+      ],
+      [
+        x('Be able to fly but only one metre high', 'Kunne fly, men bare én meter over bakken'),
+        x('Be invisible but only when nobody looks', 'Være usynlig, men bare når ingen ser på deg'),
+      ],
+      [
+        x('Forget your best memory', 'Glemme ditt beste minne'),
+        x('Relive your worst memory every year', 'Oppleve ditt verste minne på nytt hvert år'),
+      ],
+      [
+        x('Speak every language', 'Snakke alle språk'),
+        x('Play every instrument', 'Spille alle instrumenter'),
+      ],
+      [
+        x('Have no internet for a month', 'Være uten internett i en måned'),
+        x('Have no hot water for a month', 'Være uten varmtvann i en måned'),
+      ],
+      [
+        x('Be a famous athlete', 'Være en kjent idrettsutøver'),
+        x('Be a famous musician', 'Være en kjent musiker'),
+      ],
+      [
+        x('Only drink coffee for a year', 'Bare drikke kaffe i et år'),
+        x('Only drink tea for a year', 'Bare drikke te i et år'),
+      ],
+    ],
+  },
 ];
 
 type State = {
   mode: Mode;
   lang: Lang;
   players: PlayerHandle[];
+  pack: number | null;
   order: number[];
   at: number;
-  /** Own phones: 0 for the first option, 1 for the second. */
+  /** Own phones: each player's choice (0 or 1) and prediction of the majority. */
   votes: Record<PlayerHandle, number>;
+  guesses: Record<PlayerHandle, number>;
   revealed: boolean;
+  scores: Record<PlayerHandle, number>;
+  rebel: Record<PlayerHandle, number>;
+  crowd: Record<PlayerHandle, number>;
+};
+
+/** `{ value, guess }`: your choice and what you think most will choose. */
+const pickAndPredict = (payload: Json): { value: number; guess: number } => {
+  const { value, guess } = fields(payload);
+  if ((value !== 0 && value !== 1) || (guess !== 0 && guess !== 1))
+    invalid('Pick an option and a guess.');
+  return { value, guess };
 };
 
 const everyoneVoted = (state: State) => state.players.every((p) => state.votes[p] !== undefined);
 
+function reveal(state: State) {
+  state.revealed = true;
+  const voters = Object.keys(state.votes);
+  const ones = voters.filter((p) => state.votes[p] === 1).length;
+  const zeros = voters.length - ones;
+  const majority = ones === zeros ? null : ones > zeros ? 1 : 0;
+  for (const p of voters) {
+    if (majority !== null && state.guesses[p] === majority) count(state.scores, p);
+    if (majority !== null) count(state.votes[p] === majority ? state.crowd : state.rebel, p);
+  }
+}
+
 export const game = defineGame({
-  setup: ({ players, locale, mode, random }): State => ({
+  setup: ({ players, locale, mode }): State => ({
     mode,
     lang: langOf(locale),
     players: [...players],
-    order: shuffled(DILEMMAS.length, random),
+    pack: null,
+    order: [],
     at: 0,
     votes: {},
+    guesses: {},
     revealed: false,
+    scores: Object.fromEntries(players.map((p) => [p, 0])),
+    rebel: {},
+    crowd: {},
   }),
   actions: (action) => ({
+    pick: action({
+      payload: option(PACKS.length),
+      run: (state, { payload, random }) => {
+        if (state.pack !== null) invalid('The pack is chosen.');
+        state.pack = payload.value;
+        state.order = shuffled(PACKS[payload.value].dilemmas.length, random).slice(0, PER_GAME);
+      },
+    }),
     vote: action({
-      payload: option(2),
+      payload: pickAndPredict,
       run: (state, { playerId, payload }) => {
+        if (state.pack === null) invalid('Choose a pack first.');
         if (state.mode !== 'phones' || !playerId || state.revealed)
           invalid('Wait for the next question.');
         state.votes[playerId] = payload.value;
-        if (everyoneVoted(state)) state.revealed = true;
+        state.guesses[playerId] = payload.guess;
+        if (everyoneVoted(state)) reveal(state);
       },
     }),
     next: action((state) => {
+      if (state.pack === null) invalid('Choose a pack first.');
       if (state.mode === 'phones' && !state.revealed) {
         if (!Object.keys(state.votes).length) invalid('Nobody has chosen yet.');
-        state.revealed = true;
+        reveal(state);
         return;
       }
       if (state.at + 1 >= state.order.length) {
-        endGame(null);
+        endGame({ scores: state.scores });
         return;
       }
       state.at += 1;
       state.votes = {};
+      state.guesses = {};
       state.revealed = false;
     }),
   }),
   playerLeft: (state, { playerId }) => {
     state.players = state.players.filter((p) => p !== playerId);
     delete state.votes[playerId];
-    if (state.mode === 'phones' && !state.revealed && state.players.length && everyoneVoted(state))
-      state.revealed = true;
+    delete state.guesses[playerId];
+    if (
+      state.mode === 'phones' &&
+      state.pack !== null &&
+      !state.revealed &&
+      state.players.length &&
+      everyoneVoted(state)
+    )
+      reveal(state);
   },
   view: (state, playerId) => {
-    const [a, b] = DILEMMAS[state.order[state.at]];
+    const dilemma = state.pack === null ? null : PACKS[state.pack].dilemmas[state.order[state.at]];
+    const split = state.revealed
+      ? [0, 1].map((choice) => state.players.filter((p) => state.votes[p] === choice))
+      : null;
     return {
       mode: state.mode,
-      options: [a[state.lang], b[state.lang]],
+      packs:
+        state.pack === null
+          ? PACKS.map((pack) => ({ name: pack.name[state.lang], hint: pack.hint[state.lang] }))
+          : [],
+      pack: state.pack === null ? null : PACKS[state.pack].name[state.lang],
+      options: dilemma ? [dilemma[0][state.lang], dilemma[1][state.lang]] : ([] as string[]),
       number: state.at + 1,
       total: state.order.length,
       yourVote: playerId === null ? null : (state.votes[playerId] ?? null),
+      yourGuess: playerId === null ? null : (state.guesses[playerId] ?? null),
       voted: Object.keys(state.votes).length,
-      split: state.revealed
-        ? [0, 1].map((choice) => state.players.filter((p) => state.votes[p] === choice))
-        : null,
+      split,
+      // Alone on a side, with at least three voting: defend it!
+      loneWolf:
+        split && Object.keys(state.votes).length >= 3
+          ? (split.find((side) => side.length === 1)?.[0] ?? null)
+          : null,
+      scores: state.scores,
+      awards: awards(
+        [
+          { title: 'mindReader', stat: state.scores, least: 2 },
+          { title: 'rebel', stat: state.rebel, least: 2 },
+          { title: 'crowdPleaser', stat: state.crowd, least: 3 },
+        ],
+        state.players,
+      ),
     };
   },
 });

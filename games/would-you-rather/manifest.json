@@ -2,11 +2,15 @@
   "slug": "would-you-rather",
   "name": "Would You Rather",
   "description": "Two options. Pick one, then defend it.",
-  "players": { "min": 2, "max": 16 },
+  "players": {
+    "min": 2,
+    "max": 16
+  },
   "modes": ["phones", "shared"],
   "howToPlay": [
-    "Each card gives two options.",
-    "On your own phones, everyone picks; then the split is shown with names.",
+    "Pick a pack. Each card gives two options.",
+    "On your own phones, pick your answer, then predict what most people will pick. Right predictions score.",
+    "Alone on your side? Defend it!",
     "On one phone, argue it out loud."
   ],
   "translations": {
@@ -14,8 +18,9 @@
       "name": "Ville du heller",
       "description": "To valg. Velg ett, og forsvar det.",
       "howToPlay": [
-        "Hvert kort har to valg.",
-        "På egne telefoner velger alle; så vises fordelingen med navn.",
+        "Velg en pakke. Hvert kort har to valg.",
+        "På egne telefoner velger du ditt svar og gjetter hva de fleste velger. Riktig gjetning gir poeng.",
+        "Alene på din side? Forsvar det!",
         "På én telefon diskuterer dere høyt."
       ]
     }
