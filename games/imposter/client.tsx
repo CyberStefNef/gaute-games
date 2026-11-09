@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { ViewOf } from '@gaute/games-sdk/logic';
 import { gameClient, useStrings, type Translate } from '@gaute/games-sdk/react';
 import type { game } from './logic';
@@ -124,8 +124,13 @@ function Standings({ view, t }: { view: View; t: T }) {
 }
 
 function Game() {
-  const { view, you, players, name, act, playing } = useGame();
+  const { view, you, players, name, act, playing, gaute } = useGame();
   const t = useStrings({ en, nb });
+  // Gaute cheers when the imposter is caught and wobbles when they get away.
+  const verdict = view.reveal ? (view.reveal.caught ? 'celebrate' : 'oops') : null;
+  useEffect(() => {
+    if (verdict) gaute(verdict);
+  }, [verdict, view.round, gaute]);
   const present = players.filter((player) => !player.left).map((player) => player.handle);
   const page = (children: ReactNode, actions?: ReactNode, below?: ReactNode) => (
     <Page translate={t.text} actions={playing ? actions : null} below={below}>

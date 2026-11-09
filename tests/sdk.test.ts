@@ -127,3 +127,12 @@ test('game icons may only contain shapes and gradients', async () => {
   ])
     expect(iconProblem(bad)).not.toBeNull();
 });
+
+test('games can ask Gaute to react, with known reactions only', () => {
+  expect(parseGameMessage({ gaute: PROTOCOL, type: 'companion', reaction: 'celebrate' })).toEqual({
+    gaute: PROTOCOL,
+    type: 'companion',
+    reaction: 'celebrate',
+  });
+  expect(parseGameMessage({ gaute: PROTOCOL, type: 'companion', reaction: 'dance' })).toBeNull();
+});

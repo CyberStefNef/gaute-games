@@ -13,6 +13,7 @@ import {
   connect,
   type ActResult,
   type GameState,
+  type GauteReaction,
   type Haptic,
   type PayloadArgs,
   type Player,
@@ -70,6 +71,8 @@ export type Game<Rules extends AnyGameRules> = {
   rejected: string | null;
   /** Native haptic feedback on phones; ignored on the web. */
   haptic: (style?: Haptic) => void;
+  /** Gaute, the app's companion below the game, reacts: `celebrate`, `wave` or `oops`. */
+  gaute: (reaction: GauteReaction) => void;
 };
 
 function mountGame(Game: ComponentType) {
@@ -101,6 +104,7 @@ function useGame<Rules extends AnyGameRules>(): Game<Rules> {
   const { state, busy, rejected } = current;
   const { snapshot } = state;
   const haptic = useCallback((style?: Haptic) => session!.haptic(style), []);
+  const gaute = useCallback((reaction: GauteReaction) => session!.gaute(reaction), []);
   const name = (handle: PlayerHandle) => {
     const index = snapshot.players.findIndex((player) => player.handle === handle);
     return (
@@ -122,6 +126,7 @@ function useGame<Rules extends AnyGameRules>(): Game<Rules> {
     busy,
     rejected,
     haptic,
+    gaute,
   };
 }
 

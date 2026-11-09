@@ -61,6 +61,12 @@ export type Theme = {
   radius: string;
 };
 export type Haptic = 'selection' | 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
+/**
+ * How Gaute, the app's companion who stands below every screen, reacts to a
+ * moment in the game: a wave hello, a celebration, or an "oops" wobble.
+ */
+export type GauteReaction = 'wave' | 'celebrate' | 'oops';
+const GAUTE_REACTIONS: readonly GauteReaction[] = ['wave', 'celebrate', 'oops'];
 const HAPTICS: readonly Haptic[] = [
   'selection',
   'light',
@@ -91,6 +97,7 @@ export type GameMessage =
   | { gaute: typeof PROTOCOL; type: 'shown' }
   | { gaute: typeof PROTOCOL; type: 'act'; id: number; action: string; payload: Json }
   | { gaute: typeof PROTOCOL; type: 'haptic'; style: Haptic }
+  | { gaute: typeof PROTOCOL; type: 'companion'; reaction: GauteReaction }
   /** The page threw before its first render; the app offers to try again. */
   | { gaute: typeof PROTOCOL; type: 'failed'; reason: string };
 
@@ -121,6 +128,10 @@ export function parseGameMessage(raw: unknown): GameMessage | null {
       type: 'failed',
       reason: typeof message.reason === 'string' ? message.reason.slice(0, 200) : '',
     };
+  if (message.type === 'companion')
+    return GAUTE_REACTIONS.includes(message.reaction as GauteReaction)
+      ? { gaute: PROTOCOL, type: 'companion', reaction: message.reaction as GauteReaction }
+      : null;
   if (message.type === 'haptic')
     return HAPTICS.includes(message.style as Haptic)
       ? { gaute: PROTOCOL, type: 'haptic', style: message.style as Haptic }

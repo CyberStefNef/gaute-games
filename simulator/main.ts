@@ -287,6 +287,7 @@ window.addEventListener('message', (event) => {
     });
   } else if (message.type === 'shown') phone.frame.classList.add('shown');
   else if (message.type === 'haptic') log(`haptic: ${message.style}`);
+  else if (message.type === 'companion') log(`Gaute reacts: ${message.reaction}`);
   else if (message.type === 'failed')
     log(`The page failed before drawing: ${message.reason}`, true);
   else act(phone, message.id, message.action, message.payload);

@@ -7,12 +7,13 @@ import {
   parseHostMessage,
   themeVariables,
   type GameMessage,
+  type GauteReaction,
   type Haptic,
   type Snapshot,
   type Theme,
 } from './protocol';
 
-export type { Haptic, Player, Snapshot, Theme } from './protocol';
+export type { GauteReaction, Haptic, Player, Snapshot, Theme } from './protocol';
 export type GameState<View = Json> = { snapshot: Snapshot<View>; locale: string; theme: Theme };
 export type ActResult = { ok: true } | { ok: false; reason: string };
 /** The arguments after an action's name: its payload, or nothing for an action without one. */
@@ -86,6 +87,13 @@ export function connect<Rules extends AnyGameRules = AnyGameRules>(
     /** Asks the app for haptic feedback (phones only; ignored on the web). */
     haptic(style: Haptic = 'selection') {
       send({ gaute: PROTOCOL, type: 'haptic', style });
+    },
+    /**
+     * Lets Gaute, the companion below the game, react to a moment: `celebrate` a
+     * win, `wave` at the next player, `oops` at a miss. The app may skip it.
+     */
+    gaute(reaction: GauteReaction) {
+      send({ gaute: PROTOCOL, type: 'companion', reaction });
     },
   };
 }
