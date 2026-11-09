@@ -7,10 +7,20 @@
     "max": 16
   },
   "modes": ["phones", "shared"],
+  "howToPlay": [
+    "Draw a card and do what it says.",
+    "Prompts and duels name players; votes ask the whole group.",
+    "Rule cards stay in play for a few cards."
+  ],
   "translations": {
     "nb": {
       "name": "Kveldskort",
-      "description": "Spørsmål, dueller, avstemninger og tøysete regler."
+      "description": "Spørsmål, dueller, avstemninger og tøysete regler.",
+      "howToPlay": [
+        "Trekk et kort og gjør det som står.",
+        "Spørsmål og dueller nevner spillere; avstemninger spør hele gruppa.",
+        "Regelkort gjelder i noen kort."
+      ]
     }
   }
 }
