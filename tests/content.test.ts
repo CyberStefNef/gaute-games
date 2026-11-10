@@ -157,3 +157,26 @@ test('new Bluff facts reject correct alternative answers in both languages', asy
       }
     }
 });
+
+for (const slug of ['would-you-rather', 'never-have-i-ever', 'truth-or-dare'])
+  test(`${slug} mixes all packs with stable IDs and avoids themed cards on rematch`, async () => {
+    const { PACKS, PROMPTS } = await import(`../official/${slug}/content.ts`);
+    const mixed = PACKS.length - 1;
+    const ids = (pack: (typeof PROMPTS)[number]) =>
+      Array.isArray(pack)
+        ? pack.map((p: { id: string }) => p.id)
+        : [...pack.truth, ...pack.dare].map((p: { id: string }) => p.id);
+    const all: string[] = PROMPTS.slice(0, mixed).flatMap(ids);
+    expect(ids(PROMPTS[mixed]).sort()).toEqual([...all].sort());
+    expect(new Set(all).size).toBe(all.length);
+    const themed = await session(slug, 'shared', []);
+    await themed.act('pick', { value: 0 });
+    if (slug === 'truth-or-dare') await themed.act('choose', { value: 0 });
+    const history = themed.state().content.seen;
+    const game = await session(slug, 'shared', history, 'nb');
+    expect((await game.act('pick', { value: mixed })).ok).toBe(true);
+    if (slug === 'truth-or-dare') await game.act('choose', { value: 0 });
+    const current = game.state().content.seen.at(-1);
+    expect(all).toContain(current);
+    expect(history).not.toContain(current);
+  });

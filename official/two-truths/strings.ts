@@ -1,5 +1,7 @@
 export const strings = {
   en: {
+    'Try something you got away with, or a story your friends still bring up.':
+      'Try something you got away with, or a story your friends still bring up.',
     'Round {n} of {total}': 'Round {n} of {total}',
     'Prepare your statements': 'Prepare your statements',
     'Your statements are ready': 'Your statements are ready',
@@ -31,6 +33,8 @@ export const strings = {
     'Choose one of the options.': 'Choose one of the options.',
   },
   nb: {
+    'Try something you got away with, or a story your friends still bring up.':
+      'Prøv noe du slapp unna med, eller en historie vennene dine fortsatt tar opp.',
     'Round {n} of {total}': 'Runde {n} av {total}',
     'Prepare your statements': 'Forbered påstandene dine',
     'Your statements are ready': 'Påstandene dine er klare',

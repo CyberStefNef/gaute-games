@@ -1,5 +1,6 @@
 export const strings = {
   en: {
+    Play: 'Play',
     'Content history is not available.': 'Content history is not available.',
     'Pick a pack': 'Pick a pack',
     '{name}’s turn': '{name}’s turn',
@@ -7,7 +8,7 @@ export const strings = {
     Truth: 'Truth',
     Dare: 'Dare',
     Done: 'Done',
-    Chicken: 'Chicken out',
+    Skip: 'Skip',
     'Add your own': 'Add your own',
     'Write a truth or a dare…': 'Write a truth or a dare…',
     Add: 'Add',
@@ -15,7 +16,6 @@ export const strings = {
     'Titles so far': 'Titles so far',
     daredevil: 'Daredevil',
     openBook: 'Open book',
-    chicken: 'Chicken',
     'The pack is chosen.': 'The pack is chosen.',
     'Choose a pack first.': 'Choose a pack first.',
     'Finish this one first.': 'Finish this one first.',
@@ -26,6 +26,7 @@ export const strings = {
     'Choose one of the options.': 'Choose one of the options.',
   },
   nb: {
+    Play: 'Spill',
     'Content history is not available.': 'Spørsmålshistorikken er ikke tilgjengelig.',
     'Pick a pack': 'Velg en pakke',
     '{name}’s turn': '{name} sin tur',
@@ -33,7 +34,7 @@ export const strings = {
     Truth: 'Sannhet',
     Dare: 'Konsekvens',
     Done: 'Ferdig',
-    Chicken: 'Feig ut',
+    Skip: 'Hopp over',
     'Add your own': 'Legg til egne',
     'Write a truth or a dare…': 'Skriv en sannhet eller en konsekvens …',
     Add: 'Legg til',
@@ -41,7 +42,6 @@ export const strings = {
     'Titles so far': 'Titler så langt',
     daredevil: 'Våghals',
     openBook: 'Åpen bok',
-    chicken: 'Feiging',
     'The pack is chosen.': 'Pakken er valgt.',
     'Choose a pack first.': 'Velg en pakke først.',
     'Finish this one first.': 'Fullfør denne først.',

@@ -1,7 +1,13 @@
 import type { Text } from '../_kit/rules';
 
 type Category = 'geo' | 'science' | 'nature' | 'culture' | 'history' | 'norway' | 'sport';
-type Question = { q: Text; options: [Text, Text, Text, Text]; answer: number; c: Category };
+type Question = {
+  q: Text;
+  options: [Text, Text, Text, Text];
+  answer: number;
+  c: Category;
+  source?: { url: string; checkedAt: string };
+};
 const t = (en: string, nb = en): Text => ({ en, nb });
 
 export const QUESTIONS: Question[] = [
@@ -13,12 +19,18 @@ export const QUESTIONS: Question[] = [
   },
   {
     q: t(
-      'How many planets are in our solar system?',
-      'Hvor mange planeter er det i solsystemet vårt?',
+      'Which planet takes longer to rotate once than to go around the Sun?',
+      'Hvilken planet bruker lengre tid på å rotere én gang enn på å gå rundt sola?',
     ),
-    options: [t('7'), t('8'), t('9'), t('10')],
+    options: [
+      t('Mercury', 'Merkur'),
+      t('Venus', 'Venus'),
+      t('Mars', 'Mars'),
+      t('Jupiter', 'Jupiter'),
+    ],
     answer: 1,
     c: 'science',
+    source: { url: 'https://science.nasa.gov/venus/venus-facts/', checkedAt: '2026-11-10' },
   },
   {
     q: t('Which is the largest ocean?', 'Hvilket hav er størst?'),
@@ -96,10 +108,22 @@ export const QUESTIONS: Question[] = [
     c: 'science',
   },
   {
-    q: t('What is the smallest prime number?', 'Hva er det minste primtallet?'),
-    options: [t('0'), t('1'), t('2'), t('3')],
-    answer: 2,
-    c: 'science',
+    q: t(
+      'What did Nintendo sell long before it made video games?',
+      'Hva solgte Nintendo lenge før de laget dataspill?',
+    ),
+    options: [
+      t('Cameras', 'Kameraer'),
+      t('Playing cards', 'Spillkort'),
+      t('Watches', 'Klokker'),
+      t('Radio sets', 'Radioer'),
+    ],
+    answer: 1,
+    c: 'history',
+    source: {
+      url: 'https://www.nintendo.com/en-gb/Hardware/Nintendo-History/Nintendo-History-625945.html',
+      checkedAt: '2026-11-10',
+    },
   },
   {
     q: t(
@@ -164,10 +188,19 @@ export const QUESTIONS: Question[] = [
     c: 'science',
   },
   {
-    q: t('How many minutes are there in a day?', 'Hvor mange minutter er det i et døgn?'),
-    options: [t('1,240', '1 240'), t('1,440', '1 440'), t('1,640', '1 640'), t('1,840', '1 840')],
-    answer: 1,
-    c: 'science',
+    q: t('Bluetooth is named after what?', 'Hva er Bluetooth oppkalt etter?'),
+    options: [
+      t('A type of whale', 'En type hval'),
+      t('A radio engineer', 'En radioingeniør'),
+      t('A mountain range', 'En fjellkjede'),
+      t('A medieval king', 'En konge fra middelalderen'),
+    ],
+    answer: 3,
+    c: 'history',
+    source: {
+      url: 'https://www.bluetooth.com/about-us/bluetooth-origin/',
+      checkedAt: '2026-11-10',
+    },
   },
   {
     q: t('What is the capital of Iceland?', 'Hva er hovedstaden på Island?'),
@@ -185,10 +218,19 @@ export const QUESTIONS: Question[] = [
     c: 'science',
   },
   {
-    q: t('How many sides does a hexagon have?', 'Hvor mange sider har en sekskant?'),
-    options: [t('5'), t('6'), t('7'), t('8')],
+    q: t(
+      'QR codes were originally developed to track what?',
+      'Hva ble QR-koder opprinnelig utviklet for å holde styr på?',
+    ),
+    options: [
+      t('Train tickets', 'Togbilletter'),
+      t('Car parts', 'Bildeler'),
+      t('Restaurant orders', 'Restaurantbestillinger'),
+      t('Library books', 'Bibliotekbøker'),
+    ],
     answer: 1,
     c: 'science',
+    source: { url: 'https://www.denso.com/global/en/technology/qrcode/', checkedAt: '2026-11-10' },
   },
   {
     q: t(
@@ -243,16 +285,40 @@ export const QUESTIONS: Question[] = [
     c: 'geo',
   },
   {
-    q: t('What is H₂O better known as?', 'Hva er H₂O bedre kjent som?'),
-    options: [t('Salt'), t('Water', 'Vann'), t('Oxygen', 'Oksygen'), t('Sugar', 'Sukker')],
-    answer: 1,
-    c: 'science',
+    q: t(
+      'Which game gets real musicians to record songs in a made-up language?',
+      'Hvilket spill får ekte musikere til å spille inn sanger på et oppdiktet språk?',
+    ),
+    options: [
+      t('Animal Crossing', 'Animal Crossing'),
+      t('Minecraft', 'Minecraft'),
+      t('The Sims', 'The Sims'),
+      t('Stardew Valley', 'Stardew Valley'),
+    ],
+    answer: 2,
+    c: 'culture',
+    source: {
+      url: 'https://www.ea.com/games/the-sims/the-sims-4/news/reimagining-sims-sessions',
+      checkedAt: '2026-11-10',
+    },
   },
   {
-    q: t('How many legs does a spider have?', 'Hvor mange bein har en edderkopp?'),
-    options: [t('6'), t('8'), t('10'), t('12')],
+    q: t(
+      'You move to an island and Tom Nook offers you a home loan. Which game are you playing?',
+      'Du flytter til en øy, og Tom Nook tilbyr deg boliglån. Hvilket spill spiller du?',
+    ),
+    options: [
+      t('Stardew Valley', 'Stardew Valley'),
+      t('Animal Crossing: New Horizons', 'Animal Crossing: New Horizons'),
+      t('The Sims', 'The Sims'),
+      t('Terraria', 'Terraria'),
+    ],
     answer: 1,
-    c: 'nature',
+    c: 'culture',
+    source: {
+      url: 'https://play.nintendo.com/news-tips/tips-tricks/animal-crossing-new-horizons-discover-tips/',
+      checkedAt: '2026-11-10',
+    },
   },
   {
     q: t('Who wrote the play A Doll’s House?', 'Hvem skrev skuespillet Et dukkehjem?'),

@@ -339,3 +339,65 @@ test('Bluff early transitions belong to the round leader and transfer when they 
   expect((await game.act('p2', 'next')).ok).toBe(true);
   expect(game.view('p3').round).toBe(2);
 });
+
+for (const [slug, mode, yes, no] of [
+  ['charades', 'pass', 'guessed', 'skip'],
+  ['who-am-i', 'shared', 'correct', 'pass'],
+] as const)
+  test(`${slug} starts without category selection, mixes topics and keeps turn ownership`, async () => {
+    const players = ['p1', 'p2', 'p3'];
+    const game = await session(slug, mode, players);
+    const deck = JSON.parse(game.current.state).order as number[];
+    expect(new Set(deck).size).toBe(deck.length);
+    expect(deck.length).toBeGreaterThan(40);
+    expect(game.view('*').packs).toBeUndefined();
+    expect(game.view('*').word).toBeNull();
+    for (const player of players) {
+      const actor = mode === 'pass' ? player : null;
+      expect((await game.act(actor, 'start')).ok).toBe(true);
+      const viewer = actor ?? '*';
+      const first = game.view(viewer).word;
+      expect(typeof first).toBe('string');
+      if (mode === 'pass') {
+        expect(game.view('*').word).toBeNull();
+        expect(game.view(players.find((p) => p !== player)!).word).toBeNull();
+        expect((await game.act(null, yes)).ok).toBe(false);
+      }
+      expect((await game.act(actor, yes)).ok).toBe(true);
+      expect(game.view(viewer).word).not.toBe(first);
+      expect(game.view(viewer).turnScore).toBeGreaterThan(0);
+      expect((await game.act(actor, no)).ok).toBe(true);
+      expect((await game.act(actor, 'timeUp')).ok).toBe(true);
+      expect(game.view('*').recap).toHaveLength(2);
+    }
+    expect(game.current.ended).toBeDefined();
+  });
+
+test('Quiz Night doubles speed and streak bonuses as well as the base point', async () => {
+  const game = await session('quiz-night', 'phones', ['p1', 'p2']);
+  for (let round = 0; round < 3; round++) {
+    const state = JSON.parse(game.current.state);
+    const { QUESTIONS } = await import('../official/quiz-night/content');
+    const value = QUESTIONS[state.order[state.at]].answer;
+    await game.act('p1', 'answer', { value, double: true });
+    await game.act('p2', 'answer', { value, double: false });
+    expect(game.view('p1').gains.p1.points).toBe(round === 2 ? 6 : 4);
+    await game.act('p1', 'next');
+  }
+});
+
+test('Charades refills an exhausted mixed deck without ending the timed turn', async () => {
+  const game = await session('charades', 'pass', ['p1', 'p2']);
+  await game.act('p1', 'start');
+  const size = JSON.parse(game.current.state).order.length;
+  const seen: string[] = [];
+  for (let i = 0; i < size; i++) {
+    seen.push(game.view('p1').word);
+    expect((await game.act('p1', 'skip')).ok).toBe(true);
+  }
+  expect(new Set(seen).size).toBe(size);
+  expect(game.view('p1').playing).toBe(true);
+  expect(typeof game.view('p1').word).toBe('string');
+  expect(game.current.turn).toBe('p1');
+  expect(game.current.ended).toBeUndefined();
+});
