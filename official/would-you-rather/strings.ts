@@ -1,5 +1,6 @@
 export const strings = {
   en: {
+    Play: 'Play',
     'Content history is not available.': 'Content history is not available.',
     'Pick a pack': 'Pick a pack',
     'Would you rather…': 'Would you rather…',
@@ -31,6 +32,7 @@ export const strings = {
     'Choose one of the options.': 'Choose one of the options.',
   },
   nb: {
+    Play: 'Spill',
     'Content history is not available.': 'Spørsmålshistorikken er ikke tilgjengelig.',
     'Pick a pack': 'Velg en pakke',
     'Would you rather…': 'Ville du heller …',

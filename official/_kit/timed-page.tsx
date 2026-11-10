@@ -1,17 +1,15 @@
-// The page shared by the timed word games: category first, then one turn per
+// The page shared by the timed word games: one turn per
 // player with a countdown, and a recap of the last turn before the next starts.
 import type { ReactNode } from 'react';
 import type { AnyGameRules } from '@gaute/games-sdk/logic';
 import { gameClient } from '@gaute/games-sdk/react';
-import { Awards, Button, Card, Hero, Label, Muted, PackPicker, Page, Scores, Title } from './ui';
+import { Awards, Button, Card, Hero, Label, Muted, Page, Scores, Title } from './ui';
 import { Countdown, useCountdown } from './countdown';
 
 const { useGame } = gameClient<AnyGameRules>();
 export const SECONDS = 60;
 
 type TimedView = {
-  packs: { name: string; hint: string }[];
-  pack: string | null;
   player: string;
   playing: boolean;
   word: string | null;
@@ -25,7 +23,6 @@ type TimedView = {
 };
 
 export type TimedText = {
-  pick: string;
   turn: string;
   ready: string;
   instructions: string;
@@ -45,14 +42,12 @@ export type TimedText = {
 
 export function TimedPage({
   text,
-  onPick,
   onStart,
   onYes,
   onNo,
   onTimeUp,
 }: {
   text: TimedText;
-  onPick: (index: number) => void;
   onStart: () => void;
   onYes: () => void;
   onNo: () => void;
@@ -61,12 +56,6 @@ export function TimedPage({
   const { view: raw, playing } = useGame();
   const view = raw as TimedView;
   const left = useCountdown(SECONDS, view.playing && playing, onTimeUp);
-  if (!view.pack)
-    return (
-      <Page translate={text.translate}>
-        <PackPicker heading={text.pick} packs={view.packs} onPick={onPick} />
-      </Page>
-    );
   if (!view.playing) {
     const anyScore = Object.values(view.scores).some(Boolean);
     return (
@@ -100,7 +89,7 @@ export function TimedPage({
                 </div>
               </Card>
             ) : null}
-            {anyScore ? (
+            {anyScore || !playing ? (
               <Card>
                 <Label>{text.scores}</Label>
                 <Scores scores={view.scores} />
@@ -113,11 +102,9 @@ export function TimedPage({
         }
       >
         <Hero>
-          <Label>
-            {view.pack} · {text.turn}
-          </Label>
-          <Title>{text.ready}</Title>
-          <Muted>{text.instructions}</Muted>
+          {playing ? <Label>{text.turn}</Label> : null}
+          <Title>{playing ? text.ready : text.scores}</Title>
+          {playing ? <Muted>{text.instructions}</Muted> : null}
         </Hero>
       </Page>
     );

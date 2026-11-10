@@ -60,6 +60,8 @@ function Game() {
       <Page translate={t.text} below={<AddOwn />}>
         <PackPicker
           heading={t('Pick a pack')}
+          play={t('Play')}
+          defaultIndex={view.packs.length - 1}
           packs={view.packs}
           onPick={(index) => act('pick', { value: index })}
         />
@@ -108,7 +110,7 @@ function Game() {
       actions={
         playing ? (
           <div className="grid grid-cols-[1fr_2fr] gap-2">
-            <Button onClick={() => act('skip')}>{t('Chicken')}</Button>
+            <Button onClick={() => act('skip')}>{t('Skip')}</Button>
             <Button primary onClick={() => act('done')}>
               {t('Done')}
             </Button>

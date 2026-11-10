@@ -8,7 +8,7 @@
   },
   "modes": ["shared"],
   "howToPlay": [
-    "Pick a category. On your turn, hold the phone to your forehead without looking.",
+    "On your turn, hold the phone to your forehead without looking.",
     "The others give hints without saying the word.",
     "Guess as many as you can in 60 seconds. Hard words score 2. Pass if you’re stuck."
   ],
@@ -17,7 +17,7 @@
       "name": "Hvem er jeg?",
       "description": "Telefonen på panna. Gjett ordet ut fra hintene.",
       "howToPlay": [
-        "Velg en kategori. Når det er din tur, holder du telefonen mot panna uten å se.",
+        "Når det er din tur, holder du telefonen mot panna uten å se.",
         "De andre gir hint uten å si ordet.",
         "Gjett så mange du kan på 60 sekunder. Vanskelige ord gir 2 poeng. Pass hvis du står fast."
       ]

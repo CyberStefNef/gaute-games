@@ -1,6 +1,6 @@
 // Building blocks shared by the official games, styled with the app's theme
 // through Tailwind. Creators are free to use anything else.
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { AnyGameRules } from '@gaute/games-sdk/logic';
 import { gameClient } from '@gaute/games-sdk/react';
 
@@ -252,34 +252,51 @@ export function Awards({
   );
 }
 
-/** A first choice of pack or category: one large button per option. */
+/** Start with a mixed deck; themed packs are optional. */
 export function PackPicker({
   heading,
   packs,
   onPick,
+  play,
+  defaultIndex,
 }: {
+  play: string;
+  defaultIndex: number;
   heading: string;
   packs: { name: string; hint: string }[];
   onPick: (index: number) => void;
 }) {
   const { busy, playing } = useGame();
+  const [expanded, setExpanded] = useState(false);
   return (
     <Hero>
-      <Title>{heading}</Title>
-      <div className="flex w-full flex-col gap-2">
-        {packs.map((pack, index) => (
-          <button
-            key={pack.name}
-            type="button"
-            disabled={busy || !playing}
-            onClick={() => onPick(index)}
-            className="flex flex-col gap-0.5 rounded-xl border-2 border-border bg-background px-4 py-3 text-left active:border-primary disabled:opacity-60"
-          >
-            <span className="text-lg font-bold">{pack.name}</span>
-            <span className="text-sm text-muted-foreground">{pack.hint}</span>
-          </button>
-        ))}
-      </div>
+      <Button primary disabled={!playing} onClick={() => onPick(defaultIndex)}>
+        {play}
+      </Button>
+      <button
+        type="button"
+        className="min-h-11 px-3 text-sm text-primary"
+        aria-expanded={expanded}
+        onClick={() => setExpanded(!expanded)}
+      >
+        {heading}
+      </button>
+      {expanded ? (
+        <div className="flex w-full flex-col gap-2">
+          {packs.map((pack, index) => (
+            <button
+              key={pack.name}
+              type="button"
+              disabled={busy || !playing}
+              onClick={() => onPick(index)}
+              className="flex flex-col gap-0.5 rounded-xl border-2 border-border bg-background px-4 py-3 text-left active:border-primary disabled:opacity-60"
+            >
+              <span className="text-lg font-bold">{pack.name}</span>
+              <span className="text-sm text-muted-foreground">{pack.hint}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </Hero>
   );
 }

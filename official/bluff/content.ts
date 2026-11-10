@@ -1,7 +1,13 @@
 import { PILOT } from './pilot';
 import type { Text } from '../_kit/rules';
 
-type Fact = { fact: Text; truth: Text };
+type Fact = {
+  fact: Text;
+  truth: Text;
+  explanation?: Text;
+  aliases?: { en: string[]; nb: string[] };
+  source?: { url: string; checkedAt: string };
+};
 const f = (en: string, nb: string, truthEn: string, truthNb: string): Fact => ({
   fact: { en, nb },
   truth: { en: truthEn, nb: truthNb },
@@ -101,19 +107,29 @@ const FACTS: Fact[] = [
     'three',
     'tre',
   ),
-  f(
-    'The Norwegian word “pålegg” means anything you put on ___.',
-    'Ordet «pålegg» betyr alt man legger på ___.',
-    'bread',
-    'brødskiva',
-  ),
+  {
+    fact: {
+      en: "Minecraft's Creeper began as a failed attempt to make a ___.",
+      nb: 'Creeperen i Minecraft begynte som et mislykket forsøk på å lage en ___.',
+    },
+    truth: { en: 'pig', nb: 'gris' },
+    explanation: {
+      en: 'The model dimensions were mixed up while making a pig. The upright result became the Creeper.',
+      nb: 'Målene på modellen ble blandet sammen under arbeidet med en gris. Den stående figuren ble til Creeperen.',
+    },
+    aliases: { en: ['a pig', 'pigs'], nb: ['grisen', 'en gris', 'griser'] },
+    source: {
+      url: 'https://www.minecraft.net/en-us/article/meet-creeper',
+      checkedAt: '2026-11-10',
+    },
+  },
 ];
 export const PROMPTS = [
   ...FACTS.map((fact, i) => ({
-    ...fact,
-    id: `bluff-legacy-${i}`,
     explanation: { en: '', nb: '' },
     aliases: { en: [] as string[], nb: [] as string[] },
+    ...fact,
+    id: `bluff-legacy-${i}`,
   })),
   ...PILOT,
 ];

@@ -57,6 +57,8 @@ function Game() {
       <Page translate={t.text} below={<AddOwn />}>
         <PackPicker
           heading={t('Pick a pack')}
+          play={t('Play')}
+          defaultIndex={view.packs.length - 1}
           packs={view.packs}
           onPick={(index) => act('pick', { value: index })}
         />

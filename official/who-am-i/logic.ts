@@ -1,24 +1,19 @@
-import { PACKS } from './content';
+import { WORDS } from './content';
 import { defineGame } from '@gaute/games-sdk/logic';
-import { option } from '../_kit/rules';
-import { leave, pickPack, settleWord, start, timedSetup, timedView, timeUp } from '../_kit/timed';
+import { leave, settleWord, start, timedSetup, timedView, timeUp } from '../_kit/timed';
 
 // One phone on the guesser's forehead: the others see the word and give hints.
-// Pick a category first. Each player has one 60-second turn; hard words score 2.
+// Each player has one 60-second turn; hard words score 2.
 
 export const game = defineGame({
-  setup: ({ players, locale }) => timedSetup(players, locale),
+  setup: ({ players, locale, random }) => timedSetup(players, locale, WORDS, random),
   actions: (action) => ({
-    pick: action({
-      payload: option(PACKS.length),
-      run: (state, { payload, random }) => pickPack(state, PACKS, payload.value, random),
-    }),
-    start: action((state) => start(state)),
-    correct: action((state) => settleWord(state, PACKS, true)),
-    pass: action((state) => settleWord(state, PACKS, false)),
+    start: action((state, { random }) => start(state, WORDS, random)),
+    correct: action((state, { random }) => settleWord(state, WORDS, true, random)),
+    pass: action((state, { random }) => settleWord(state, WORDS, false, random)),
     timeUp: action((state) => timeUp(state)),
   }),
   playerLeft: (state, { playerId }) => leave(state, playerId),
   // On one shared phone, the screen shows the word to everyone but the guesser.
-  view: (state) => timedView(state, PACKS, true),
+  view: (state) => timedView(state, WORDS, true),
 });

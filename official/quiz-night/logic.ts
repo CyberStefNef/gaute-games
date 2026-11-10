@@ -58,7 +58,7 @@ function reveal(state: State) {
     if (answer.value === right) {
       state.streaks[player] = (state.streaks[player] ?? 0) + 1;
       const streak = state.streaks[player];
-      const points = (answer.double ? 2 : 1) + (first ? 1 : 0) + (streak >= 3 ? 1 : 0);
+      const points = (1 + (first ? 1 : 0) + (streak >= 3 ? 1 : 0)) * (answer.double ? 2 : 1);
       state.gains[player] = { points, fastest: first, streak };
       score(state.scores, player, points);
       count(state.correct, player);

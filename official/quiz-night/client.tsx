@@ -1,5 +1,5 @@
 import { strings } from './strings';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { gameClient, useStrings } from '@gaute/games-sdk/react';
 import type { game } from './logic';
 import { Awards, Button, Card, Hero, Label, Muted, Page, Scores, Title } from '../_kit/ui';
@@ -11,6 +11,7 @@ function Game() {
   const { view, players, name, act, playing, busy } = useGame();
   const t = useStrings(strings);
   const [double, setDouble] = useState(false);
+  useEffect(() => setDouble(false), [view.number]);
   const phones = view.mode === 'phones';
   const present = players.filter((player) => !player.left).length;
   const last = view.number === view.total;

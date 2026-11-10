@@ -1,35 +1,46 @@
-import { PACKS } from './content';
-import { defineGame } from '@gaute/games-sdk/logic';
-import { option } from '../_kit/rules';
+import { WORDS } from './content';
+import { defineGame, invalid, type PlayerHandle } from '@gaute/games-sdk/logic';
 import {
   leave,
-  pickPack,
   settleWord,
   start,
   timedSetup,
   timedView,
   timeUp,
   turnPlayer,
+  type TimedState,
 } from '../_kit/timed';
 
 // Pass the phone to the actor: only they see the word and act it out without
-// speaking. Pick a category first. One 60-second turn each; hard words score 2.
+// speaking. One 60-second turn each; hard words score 2.
+
+function requireActor(state: TimedState, playerId: PlayerHandle | null) {
+  if (playerId !== turnPlayer(state)) invalid('It is not your turn.');
+}
 
 export const game = defineGame({
-  setup: ({ players, locale }) => timedSetup(players, locale),
+  setup: ({ players, locale, random }) => timedSetup(players, locale, WORDS, random),
   actions: (action) => ({
-    pick: action({
-      payload: option(PACKS.length),
-      run: (state, { payload, random }) => pickPack(state, PACKS, payload.value, random),
+    start: action((state, { random, playerId }) => {
+      requireActor(state, playerId);
+      start(state, WORDS, random);
     }),
-    start: action((state) => start(state)),
-    guessed: action((state) => settleWord(state, PACKS, true)),
-    skip: action((state) => settleWord(state, PACKS, false)),
-    timeUp: action((state) => timeUp(state)),
+    guessed: action((state, { random, playerId }) => {
+      requireActor(state, playerId);
+      settleWord(state, WORDS, true, random);
+    }),
+    skip: action((state, { random, playerId }) => {
+      requireActor(state, playerId);
+      settleWord(state, WORDS, false, random);
+    }),
+    timeUp: action((state, { playerId }) => {
+      requireActor(state, playerId);
+      timeUp(state);
+    }),
   }),
-  // The phone goes to the actor for their whole turn, once a category is chosen.
-  turn: (state) => (state.pack === null ? null : turnPlayer(state)),
+  // The phone goes to the actor for their whole turn, including the ready screen.
+  turn: (state) => turnPlayer(state),
   playerLeft: (state, { playerId }) => leave(state, playerId),
   // Only the actor sees the word.
-  view: (state, playerId) => timedView(state, PACKS, playerId === turnPlayer(state)),
+  view: (state, playerId) => timedView(state, WORDS, playerId === turnPlayer(state)),
 });
