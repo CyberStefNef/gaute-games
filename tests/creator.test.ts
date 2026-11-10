@@ -10,6 +10,7 @@ import {
 } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { stripVTControlCharacters } from 'node:util';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { ROOT } from '../tools/games.mjs';
@@ -18,7 +19,7 @@ import { loadIndexedGame } from '../tools/registry.mjs';
 async function devCatalogue(cli: string, project: string) {
   const child = spawn(process.execPath, [cli, 'dev', project], {
     cwd: project,
-    env: { ...process.env, NODE_ENV: 'development' },
+    env: { ...process.env, NODE_ENV: 'development', FORCE_COLOR: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const stopped = once(child, 'close');
@@ -31,7 +32,7 @@ async function devCatalogue(cli: string, project: string) {
       );
       child.stdout.on('data', (chunk) => {
         output += String(chunk);
-        const url = output.match(/http:\/\/127\.0\.0\.1:\d+\//)?.[0];
+        const url = stripVTControlCharacters(output).match(/http:\/\/127\.0\.0\.1:\d+\//)?.[0];
         if (url) {
           clearTimeout(timeout);
           resolve(url);
