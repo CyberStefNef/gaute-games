@@ -1,7 +1,7 @@
 {
   "slug": "tonight-cards",
   "name": "Tonight Cards",
-  "description": "Prompts, duels, votes and silly rules.",
+  "description": "Stories, duels, group votes and rules that last a few cards.",
   "players": {
     "min": 3,
     "max": 16
@@ -15,7 +15,7 @@
   "translations": {
     "nb": {
       "name": "Kveldskort",
-      "description": "Spørsmål, dueller, avstemninger og tøysete regler.",
+      "description": "Historier, dueller, avstemninger og regler som varer noen kort.",
       "howToPlay": [
         "Trekk et kort og gjør det som står.",
         "Spørsmål, dueller og den varme stolen nevner spillere; rundt-bordet-kort går rundt gruppa.",

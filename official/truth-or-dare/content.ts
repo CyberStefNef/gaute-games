@@ -11,21 +11,33 @@ export const PACKS: Pack[] = [
     hint: x('Easy, funny, for any group', 'Lett og morsomt, for alle'),
     truths: [
       x('What is your most useless talent?', 'Hva er ditt mest ubrukelige talent?'),
-      x('What did you want to be when you were ten?', 'Hva ville du bli da du var ti?'),
+      x(
+        'What did you make your whole personality for a while?',
+        'Hva gjorde du til hele personligheten din en periode?',
+      ),
       x('Which app do you open way too often?', 'Hvilken app åpner du altfor ofte?'),
-      x('What is the strangest food you have ever liked?', 'Hva er den rareste maten du har likt?'),
+      x(
+        'What tiny thing has made you lose interest in someone?',
+        'Hvilken liten ting har fått deg til å miste interessen for noen?',
+      ),
       x('What was your worst haircut?', 'Hva var din verste frisyre?'),
       x(
         'Which song do you know every word of but would never admit to?',
         'Hvilken sang kan du hvert ord av, men ville aldri innrømmet?',
       ),
       x('What would {p1} be famous for?', 'Hva ville {p1} vært kjent for?'),
-      x('What is the best gift you have ever given?', 'Hva er den beste gaven du har gitt?'),
       x(
-        'Who here would survive longest on a desert island?',
-        'Hvem her ville overlevd lengst på en øde øy?',
+        'What have you spent money on and then hidden the price?',
+        'Hva har du brukt penger på og så skjult prisen på?',
       ),
-      x('What is your go-to karaoke song?', 'Hva er karaokesangen din?'),
+      x(
+        'Who here would you ask to write a risky message for you?',
+        'Hvem her ville du bedt om å skrive en risikabel melding for deg?',
+      ),
+      x(
+        'What song would expose a phase you pretend never happened?',
+        'Hvilken sang ville avslørt en fase du later som aldri skjedde?',
+      ),
       x('What is the last thing you searched for online?', 'Hva søkte du sist etter på nettet?'),
       x('What is your weirdest fear?', 'Hva er den rareste frykten din?'),
     ],
@@ -34,46 +46,58 @@ export const PACKS: Pack[] = [
         'Do your best impression of {p1} until someone guesses who.',
         'Gjør din beste etterligning av {p1} til noen gjetter hvem.',
       ),
-      x('Talk like a pirate until your next turn.', 'Snakk som en pirat til din neste tur.'),
       x(
-        'Sing the chorus of the last song you listened to.',
-        'Syng refrenget av den siste sangen du hørte på.',
+        'Sell the group the worst purchase you ever made. You have 30 seconds.',
+        'Selg gruppa det verste kjøpet du har gjort. Du har 30 sekunder.',
       ),
       x(
-        'Do ten squats while counting in another language.',
-        'Ta ti knebøy mens du teller på et annet språk.',
+        'Give {p1} a fake excuse for cancelling tonight. They get two follow-up questions to catch you out.',
+        'Gi {p1} en falsk unnskyldning for å avlyse i kveld. De får to oppfølgingsspørsmål for å avsløre deg.',
+      ),
+      x(
+        'Try to ask {p1} for a huge favour without saying what you need. They can ask five yes-or-no questions.',
+        'Prøv å be {p1} om en stor tjeneste uten å si hva du trenger. De kan stille fem ja-eller-nei-spørsmål.',
       ),
       x(
         'Everyone: on three, point at the person most likely to be late. {p1} counts.',
         'Alle: på tre peker dere på den som oftest kommer for sent. {p1} teller.',
       ),
-      x('Hum a song until someone guesses it.', 'Nynn en sang til noen gjetter den.'),
       x(
-        'Give {p1} a new nickname for the night. Everyone must use it.',
-        'Gi {p1} et nytt kallenavn for kvelden. Alle må bruke det.',
+        'Imitate how someone here says they are ready to leave. The group guesses who.',
+        'Etterlign hvordan noen her sier at de er klare til å dra. Gruppa gjetter hvem.',
       ),
       x(
-        'Do a dramatic reading of your last text message.',
-        'Les opp den siste tekstmeldingen din dramatisk.',
+        'Invent a dating profile for {p1}. Include one thing they would definitely leave out.',
+        'Finn på en datingprofil for {p1}. Ta med én ting de helt klart ville utelatt.',
       ),
       x(
-        'Do your best animal impression until someone guesses the animal.',
-        'Gjør ditt beste dyreinntrykk til noen gjetter dyret.',
+        'Say "we need to talk" as a flatmate, a date and your boss. The group guesses which is which.',
+        'Si «vi må snakke» som en samboer, en date og sjefen din. Gruppa gjetter hvem som er hvem.',
       ),
       x(
-        'Name a fruit for every letter from A to J.',
-        'Nevn en frukt for hver bokstav fra A til J.',
+        'Recreate your face after opening a message you were not meant to see. No words.',
+        'Vis ansiktet ditt etter å ha åpnet en melding du ikke skulle sett. Uten ord.',
       ),
       x(
-        'Everyone: switch seats. The last one standing does a dance move.',
-        'Alle: bytt plass. Den siste som står, viser et dansetrinn.',
+        'Defend an opinion you disagree with for 30 seconds. The group chooses it.',
+        'Forsvar en mening du er uenig i i 30 sekunder. Gruppa velger den.',
       ),
-      x('Talk in a whisper until your next turn.', 'Snakk hviskende til din neste tur.'),
+      x(
+        'Everyone invents a job for you. Give a 20-second interview for the worst one.',
+        'Alle finner på en jobb til deg. Gjør et 20 sekunders jobbintervju for den verste.',
+      ),
+      x(
+        'Let {p1} interview you for 30 seconds. Every answer must be a lie.',
+        'La {p1} intervjue deg i 30 sekunder. Hvert svar må være en løgn.',
+      ),
     ],
   },
   {
     name: x('Party', 'Fest'),
-    hint: x('Louder, sillier, more people involved', 'Mer støy, mer tull, flere med'),
+    hint: x(
+      'Bluffs, performances and group challenges',
+      'Bløff, opptredener og gruppeutfordringer',
+    ),
     truths: [
       x(
         'What is the most embarrassing thing on your phone right now?',
@@ -93,10 +117,13 @@ export const PACKS: Pack[] = [
         'Hvem her gir de beste rådene, og hvem de verste?',
       ),
       x(
-        'What is the most childish thing you still do?',
-        'Hva er det mest barnslige du fortsatt gjør?',
+        'What do you pretend not to care about but check constantly?',
+        'Hva later du som du ikke bryr deg om, men sjekker hele tiden?',
       ),
-      x('What is your guilty-pleasure TV show?', 'Hvilken TV-serie er din guilty pleasure?'),
+      x(
+        'What do you hate-watch and then keep watching?',
+        'Hva ser du på bare for å irritere deg, og så fortsetter du å se?',
+      ),
       x(
         'Have you ever been told off by a stranger? What happened?',
         'Har du blitt kjeftet på av en fremmed? Hva skjedde?',
@@ -110,48 +137,60 @@ export const PACKS: Pack[] = [
         'Hvis du måtte bytte liv med {p1} i en uke, hva ville du gjort først?',
       ),
       x('What is the worst date you have been on?', 'Hva er den verste daten du har vært på?'),
-      x('Who in this room do you think is the funniest?', 'Hvem i rommet synes du er morsomst?'),
+      x(
+        'Who here could talk you into a terrible idea? What would it be?',
+        'Hvem her kunne overtalt deg til en elendig idé? Hva ville det vært?',
+      ),
     ],
     dares: [
       x(
-        'Let {p1} post an emoji of their choice on your social media story.',
-        'La {p1} legge ut en emoji etter eget valg i storyen din.',
+        'You and {p1} play flatmates. Argue for 30 seconds about an issue the group invents.',
+        'Du og {p1} spiller samboere. Krangle i 30 sekunder om noe gruppa finner på.',
       ),
       x(
         'Keep a straight face while the group tries to make you laugh for 30 seconds.',
         'Hold maska mens gruppa prøver å få deg til å le i 30 sekunder.',
       ),
-      x('Swap a piece of clothing with {p1}.', 'Bytt et klesplagg med {p1}.'),
       x(
-        'Do a slow-motion replay of your last big win.',
-        'Vis en sakte film av din siste store seier.',
+        'You and {p1} have 30 seconds to invent a convincing story about how you met.',
+        'Du og {p1} har 30 sekunder på å finne på en troverdig historie om hvordan dere møttes.',
       ),
       x(
-        'Everyone: the last person to touch their nose has to sing a line of any song.',
-        'Alle: den siste som tar seg på nesa, må synge en linje av en sang.',
+        'Defend your most embarrassing past phase as if you are still in it. You have 30 seconds.',
+        'Forsvar din flaueste tidligere fase som om du fortsatt er i den. Du har 30 sekunder.',
       ),
       x(
-        'Pretend to be a tour guide and present this room.',
-        'Lat som du er guide og presenter dette rommet.',
+        'Everyone closes their eyes and points at whoever takes longest to reply. Open your eyes together.',
+        'Alle lukker øynene og peker på den som bruker lengst tid på å svare. Åpne øynene samtidig.',
       ),
-      x('Act out {p1}’s morning routine without words.', 'Spill {p1} sin morgenrutine uten ord.'),
       x(
-        'Give a two-minute speech about your favourite vegetable.',
-        'Hold en tale på to minutter om favorittgrønnsaken din.',
+        'Pitch a flat with every red flag the group suggests. You still have to get {p1} to rent it.',
+        'Selg inn en leilighet med alle varsellampene gruppa foreslår. Du må fortsatt få {p1} til å leie den.',
+      ),
+      x(
+        'Imitate {p1} trying to explain why they left someone on read.',
+        'Etterlign {p1} som prøver å forklare hvorfor de lot en melding stå på lest.',
+      ),
+      x(
+        'Pitch a terrible business idea for 30 seconds. {p1} decides whether to invest.',
+        'Selg inn en elendig forretningsidé i 30 sekunder. {p1} bestemmer om de vil investere.',
       ),
       x(
         'Speak only in questions until your next turn.',
         'Snakk bare i spørsmål til din neste tur.',
       ),
       x(
-        'Everyone: thumb war tournament. {p1} referees.',
-        'Alle: tommelkrig-turnering. {p1} er dommer.',
+        'You and {p1} each invent a fake story about the other. The group picks the one that sounds more believable.',
+        'Du og {p1} finner på hver deres falske historie om den andre. Gruppa velger den mest troverdige.',
       ),
       x(
-        'Walk like a model across the room while {p1} commentates.',
-        'Gå som en modell over rommet mens {p1} kommenterer.',
+        'Sell {p1} on a terrible date idea without admitting why it is terrible.',
+        'Overbevis {p1} om en elendig date-idé uten å innrømme hva som er galt med den.',
       ),
-      x('Show the group the last photo you took.', 'Vis gruppa det siste bildet du tok.'),
+      x(
+        'Describe a photo you wish you had never been in. The group guesses what happened.',
+        'Beskriv et bilde du skulle ønske du ikke var med på. Gruppa gjetter hva som skjedde.',
+      ),
     ],
   },
   {
@@ -164,47 +203,65 @@ export const PACKS: Pack[] = [
       ),
       x('When did you last cry, and why?', 'Når gråt du sist, og hvorfor?'),
       x(
-        'What is the best decision you made this year?',
-        'Hva er den beste avgjørelsen du har tatt i år?',
+        'What did you ignore even though your friends were right about it?',
+        'Hva ignorerte du selv om vennene dine hadde rett?',
       ),
       x('What do people often get wrong about you?', 'Hva tar folk ofte feil av om deg?'),
-      x('What is something {p1} does that you admire?', 'Hva gjør {p1} som du beundrer?'),
       x(
-        'What would you do if you knew you could not fail?',
-        'Hva ville du gjort hvis du visste at du ikke kunne mislykkes?',
+        'What does {p1} get away with that you never could?',
+        'Hva slipper {p1} unna med som du aldri kunne gjort?',
+      ),
+      x(
+        'What would you try if nobody you knew could ever find out?',
+        'Hva ville du prøvd hvis ingen du kjenner kunne funnet det ut?',
       ),
       x(
         'Which moment of your life would you relive?',
         'Hvilket øyeblikk i livet ville du opplevd på nytt?',
       ),
-      x('What is a habit you are trying to change?', 'Hvilken vane prøver du å endre?'),
       x(
-        'What is the kindest thing a stranger has done for you?',
-        'Hva er det snilleste en fremmed har gjort for deg?',
+        'What do you judge people for while doing it yourself?',
+        'Hva dømmer du andre for selv om du gjør det selv?',
       ),
-      x('What is a skill you wish you had?', 'Hvilken ferdighet skulle du ønske du hadde?'),
+      x(
+        "When did you last pretend to agree just to stay on someone's good side?",
+        'Når lot du sist som du var enig bare for å holde deg inne med noen?',
+      ),
+      x(
+        'What are you jealous of that you would never admit in the group chat?',
+        'Hva er du misunnelig på som du aldri ville innrømmet i gruppechatten?',
+      ),
     ],
     dares: [
       x(
-        'Tell {p1} one thing you have always appreciated about them.',
-        'Fortell {p1} én ting du alltid har satt pris på ved dem.',
-      ),
-      x('Compliment every person here, one by one.', 'Gi alle her et kompliment, én etter én.'),
-      x(
-        'Describe your perfect day, minute by minute, in one breath.',
-        'Beskriv den perfekte dagen din, minutt for minutt, på ett pust.',
+        'Say what your first impression of {p1} was. They tell you what you got wrong.',
+        'Si hva førsteinntrykket ditt av {p1} var. De sier hva du tok feil av.',
       ),
       x(
-        'Everyone: share one word for how tonight feels.',
-        'Alle: si ett ord for hvordan kvelden føles.',
+        'Let everyone guess which person here you would call for help hiding an embarrassing mistake. Then pick.',
+        'La alle gjette hvem her du ville ringt for å skjule en flau tabbe. Velg etterpå.',
       ),
-      x('Make up a short poem about {p1}.', 'Lag et kort dikt om {p1}.'),
+      x(
+        'Tell a true story in 30 seconds. Leave out one detail and let the group guess it.',
+        'Fortell en sann historie på 30 sekunder. Utelat én detalj og la gruppa gjette den.',
+      ),
+      x(
+        'Everyone predicts what you will be doing in five years. Pick the most likely prediction.',
+        'Alle gjetter hva du gjør om fem år. Velg det mest sannsynlige svaret.',
+      ),
+      x(
+        'Invent a voice note from {p1} after their worst possible first date. Perform it without recording anything.',
+        'Finn på en talemelding fra {p1} etter deres verst tenkelige første date. Fremfør den uten å ta opp noe.',
+      ),
       x('Tell the story of how you met {p1}.', 'Fortell historien om hvordan du møtte {p1}.'),
       x(
-        'Name three things you are grateful for right now.',
-        'Nevn tre ting du er takknemlig for akkurat nå.',
+        'Let {p1} tell one true story about you and invent one. Everyone else guesses which happened.',
+        'La {p1} fortelle én sann historie om deg og finne på én. Resten gjetter hva som skjedde.',
       ),
-      x('Give {p1} a piece of honest advice.', 'Gi {p1} et ærlig råd.'),
+      x(
+        "You and {p1} each guess the other's worst habit as a flatmate. Reveal together.",
+        'Du og {p1} gjetter hverandres verste vane som samboer. Si det samtidig.',
+      ),
     ],
   },
   {
@@ -221,16 +278,16 @@ export const PACKS: Pack[] = [
         'Har du noen gang vært forelsket i noen i dette rommet?',
       ),
       x(
-        'What is the most rebellious thing you have done?',
-        'Hva er det mest opprørske du har gjort?',
+        'What did you do just because someone told you not to?',
+        'Hva gjorde du bare fordi noen ba deg la være?',
       ),
       x(
-        'Rate {p1}’s dance moves from 1 to 10, and explain.',
-        'Gi {p1} sine dansetrinn en karakter fra 1 til 10, og forklar.',
+        'What would make you mute {p1} for a week?',
+        'Hva ville fått deg til å dempe {p1} i en uke?',
       ),
       x(
-        'What is the cheesiest pick-up line you have used or heard?',
-        'Hva er den mest klisjéaktige sjekkereplikken du har brukt eller hørt?',
+        'What is the worst message you sent while trying to flirt?',
+        'Hva er den verste meldingen du har sendt mens du prøvde å flørte?',
       ),
       x(
         'What is something you would only admit to tonight?',
@@ -240,30 +297,36 @@ export const PACKS: Pack[] = [
     ],
     dares: [
       x(
-        'Let {p1} read your last three searches out loud.',
-        'La {p1} lese opp de tre siste søkene dine.',
+        'Invent three search queries that sum up your week. The group guesses which one actually happened.',
+        'Finn på tre nettsøk som oppsummerer uka di. Gruppa gjetter hvilket du faktisk gjorde.',
       ),
       x(
-        'Call a friend and sing them happy birthday, whatever the date.',
-        'Ring en venn og syng hurra for deg, uansett dato.',
-      ),
-      x('Do your best runway walk with {p1} as your partner.', 'Gå catwalk med {p1} som partner.'),
-      x('Serenade {p1} with a love song of your choice.', 'Syng en kjærlighetssang for {p1}.'),
-      x(
-        'Let the group choose a pose for you to hold for 30 seconds.',
-        'La gruppa velge en positur du holder i 30 sekunder.',
+        'Write a fake apology for a disaster the group invents. Read it like someone trying to keep their followers.',
+        'Finn på en unnskyldning for en katastrofe gruppa finner på. Les den som noen som prøver å beholde følgerne sine.',
       ),
       x(
-        'Send the third person in your chats a voice message of you laughing.',
-        'Send den tredje personen i chattene dine en talemelding der du ler.',
+        'You and {p1} pretend you have been caught sneaking out of a party. Give matching excuses without planning first.',
+        'Du og {p1} later som dere blir tatt i å snike dere fra en fest. Gi samme unnskyldning uten å planlegge først.',
       ),
       x(
-        'Swap phones with {p1} for two minutes. No snooping.',
-        'Bytt mobil med {p1} i to minutter. Ingen snoking.',
+        'Flirt with {p1} using only complaints. They decide whether to give you a second date.',
+        'Flørt med {p1} bare ved å klage. De avgjør om du får en andre date.',
       ),
       x(
-        'Do a dramatic slow-motion fall, then get up like nothing happened.',
-        'Gjør et dramatisk fall i sakte film, og reis deg som om ingenting skjedde.',
+        'Ask {p1} five questions as if you are their suspicious flatmate. They must answer without using yes or no.',
+        'Still {p1} fem spørsmål som om du er deres mistenksomme samboer. De må svare uten å bruke ja eller nei.',
+      ),
+      x(
+        'Act out how you flirt. {p1} plays someone who completely misses the hint.',
+        'Vis hvordan du flørter. {p1} spiller en som ikke tar hintet.',
+      ),
+      x(
+        'You and {p1} must agree on the worst possible first date in 30 seconds. Pitch it to the group.',
+        'Du og {p1} må bli enige om den verst tenkelige første daten på 30 sekunder. Selg den inn til gruppa.',
+      ),
+      x(
+        'Pretend you accidentally sent a screenshot to the person in it. Talk your way out of it.',
+        'Lat som du sendte et skjermbilde til personen i det ved et uhell. Prøv å snakke deg ut av det.',
       ),
     ],
   },
@@ -279,3 +342,14 @@ export const PROMPTS = PACKS.map((pack, p) => ({
     ...PILOT.filter((prompt) => prompt.pack === p && prompt.kind === 'dare'),
   ],
 }));
+
+// Mix existing prompt records without changing their history IDs.
+PROMPTS.push({
+  truth: PROMPTS.flatMap((pack) => pack.truth),
+  dare: PROMPTS.flatMap((pack) => pack.dare),
+});
+PACKS.push({
+  ...PACKS[0],
+  name: x('Mixed', 'Blandet'),
+  hint: x('A bit of everything', 'Litt av alt'),
+});

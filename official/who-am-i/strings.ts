@@ -1,6 +1,5 @@
 export const strings = {
   en: {
-    'Pick a category': 'Pick a category',
     'Turn {n} of {total}': 'Turn {n} of {total}',
     '{name}, hold the phone to your forehead': '{name}, hold the phone to your forehead',
     'The others give hints without saying the word. Hard words score 2.':
@@ -14,14 +13,10 @@ export const strings = {
     Scores: 'Scores',
     Titles: 'Titles',
     star: 'Star guesser',
-    'The category is chosen.': 'The category is chosen.',
-    'Choose a category first.': 'Choose a category first.',
     'The turn has started.': 'The turn has started.',
     'Start the turn first.': 'Start the turn first.',
-    'Choose one of the options.': 'Choose one of the options.',
   },
   nb: {
-    'Pick a category': 'Velg en kategori',
     'Turn {n} of {total}': 'Tur {n} av {total}',
     '{name}, hold the phone to your forehead': '{name}, hold telefonen mot panna',
     'The others give hints without saying the word. Hard words score 2.':
@@ -35,10 +30,7 @@ export const strings = {
     Scores: 'Poeng',
     Titles: 'Titler',
     star: 'Gjettemester',
-    'The category is chosen.': 'Kategorien er valgt.',
-    'Choose a category first.': 'Velg en kategori først.',
     'The turn has started.': 'Turen har startet.',
     'Start the turn first.': 'Start turen først.',
-    'Choose one of the options.': 'Velg et av alternativene.',
   },
 } as const;

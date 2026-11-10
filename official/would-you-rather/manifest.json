@@ -8,7 +8,7 @@
   },
   "modes": ["phones", "shared"],
   "howToPlay": [
-    "Pick a pack. Each card gives two options.",
+    "Start with a mixed deck or choose a pack. Each card gives two options.",
     "On your own phones, pick your answer, then predict what most people will pick. Right predictions score.",
     "Alone on your side? Defend it!",
     "On one phone, argue it out loud."
@@ -18,7 +18,7 @@
       "name": "Ville du heller",
       "description": "To valg. Velg ett, og forsvar det.",
       "howToPlay": [
-        "Velg en pakke. Hvert kort har to valg.",
+        "Start med en blandet kortstokk eller velg en pakke. Hvert kort har to valg.",
         "På egne telefoner velger du ditt svar og gjetter hva de fleste velger. Riktig gjetning gir poeng.",
         "Alene på din side? Forsvar det!",
         "På én telefon diskuterer dere høyt."

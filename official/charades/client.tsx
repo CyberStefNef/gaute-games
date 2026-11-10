@@ -12,7 +12,6 @@ function Game() {
   return (
     <TimedPage
       text={{
-        pick: t('Pick a category'),
         turn: t('Turn {n} of {total}', { n: view.turn, total: view.turns }),
         ready: t('Your turn to act, {name}', { name: name(view.player) }),
         instructions: t('Act out each word without speaking. Hide the screen! Hard words score 2.'),
@@ -27,7 +26,6 @@ function Game() {
         award: (key) => t.text(key),
         translate: t.text,
       }}
-      onPick={(index) => void act('pick', { value: index })}
       onStart={() => void act('start')}
       onYes={() => void act('guessed')}
       onNo={() => void act('skip')}

@@ -29,6 +29,9 @@ function Write() {
       <Hero>
         <Label>{t('Prepare your statements')}</Label>
         <Title>{t('Write two truths and one lie')}</Title>
+        <Muted>
+          {t('Try something you got away with, or a story your friends still bring up.')}
+        </Muted>
         <div className="flex w-full flex-col gap-2 text-left">
           {texts.map((text, index) => (
             <div key={index} className="flex items-center gap-2">

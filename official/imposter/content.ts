@@ -105,4 +105,21 @@ export const CATEGORIES: Category[] = [
       w('Golf', 'Golf'),
     ],
   },
+  {
+    name: w('Online', 'På nett'),
+    words: [
+      w('Screenshot', 'Skjermbilde'),
+      w('Voice note', 'Talemelding'),
+      w('Group chat', 'Gruppechat'),
+      w('Read receipt', 'Lesebekreftelse'),
+      w('Mute', 'Demp'),
+      w('Block', 'Blokker'),
+      w('Ghosting', 'Ghosting'),
+      w('Livestream', 'Direktesending'),
+      w('Filter', 'Filter'),
+      w('Comment', 'Kommentar'),
+      w('Private account', 'Privat konto'),
+      w('Unfollow', 'Slutt å følge'),
+    ],
+  },
 ];

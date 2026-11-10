@@ -35,7 +35,6 @@ type State = {
   card: Card | null;
   truthsTaken: Record<PlayerHandle, number>;
   daresDone: Record<PlayerHandle, number>;
-  skips: Record<PlayerHandle, number>;
 };
 
 const player = (state: State) => state.players[state.current % state.players.length];
@@ -67,7 +66,6 @@ export const game = defineGame({
     card: null,
     truthsTaken: {},
     daresDone: {},
-    skips: {},
   }),
   actions: (action) => ({
     restoreContent: action({
@@ -136,7 +134,6 @@ export const game = defineGame({
     }),
     skip: action((state) => {
       if (!state.card) invalid('Choose truth or dare first.');
-      count(state.skips, player(state));
       pass(state);
     }),
   }),
@@ -165,7 +162,6 @@ export const game = defineGame({
       [
         { title: 'daredevil', stat: state.daresDone, least: 2 },
         { title: 'openBook', stat: state.truthsTaken, least: 2 },
-        { title: 'chicken', stat: state.skips },
       ],
       state.players,
     ),

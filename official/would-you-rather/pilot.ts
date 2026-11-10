@@ -5,38 +5,38 @@ export const PILOT = [
     pack: 0,
     topic: 'social',
     a: {
-      en: 'Have entrance music everyone can hear',
-      nb: 'Ha inngangsmusikk alle kan høre',
+      en: 'Have a friend tell you a hard truth to your face',
+      nb: 'La en venn si en ubehagelig sannhet rett til deg',
     },
     b: {
-      en: 'Have a narrator announce your mistakes',
-      nb: 'Ha en forteller som kommenterer feilene dine',
+      en: 'Find out everyone else already knew it',
+      nb: 'Finne ut at alle andre visste det allerede',
     },
   },
   {
     id: 'wyr-pilot-002',
     pack: 0,
-    topic: 'food',
+    topic: 'money',
     a: {
-      en: 'Only eat crunchy food for a week',
-      nb: 'Bare spise sprø mat i en uke',
+      en: 'Always cover the friend who never pays you back',
+      nb: 'Alltid legge ut for vennen som aldri betaler tilbake',
     },
     b: {
-      en: 'Only eat food with a spoon for a month',
-      nb: 'Bare spise med skje i en måned',
+      en: 'Be the friend nobody will lend money to',
+      nb: 'Være vennen ingen vil låne penger til',
     },
   },
   {
     id: 'wyr-pilot-003',
     pack: 0,
-    topic: 'clothes',
+    topic: 'social',
     a: {
-      en: 'Wear a cape to every formal event',
-      nb: 'Bruke kappe på alle formelle tilstelninger',
+      en: "Like a photo from five years ago while looking at your crush's profile",
+      nb: 'Like et fem år gammelt bilde mens du snoker på profilen til den du liker',
     },
     b: {
-      en: 'Wear ski goggles in every holiday photo',
-      nb: 'Bruke skibriller på alle feriebilder',
+      en: 'Accidentally send them the screenshot you took of their profile',
+      nb: 'Sende dem skjermbildet du tok av profilen deres ved et uhell',
     },
   },
   {
@@ -44,12 +44,12 @@ export const PILOT = [
     pack: 0,
     topic: 'habits',
     a: {
-      en: 'Always have perfect hair but squeaky shoes',
-      nb: 'Alltid ha perfekt hår, men knirkende sko',
+      en: 'Always look confident when you have no idea what you are doing',
+      nb: 'Alltid se selvsikker ut når du ikke aner hva du driver med',
     },
     b: {
-      en: 'Always have silent shoes but windblown hair',
-      nb: 'Alltid ha stille sko, men vindblåst hår',
+      en: 'Always look nervous when you know you are right',
+      nb: 'Alltid se nervøs ut når du vet du har rett',
     },
   },
   {
@@ -57,12 +57,12 @@ export const PILOT = [
     pack: 0,
     topic: 'social',
     a: {
-      en: 'Explain every joke you tell',
-      nb: 'Forklare hver vits du forteller',
+      en: 'Have to explain why nobody laughed at your joke',
+      nb: 'Måtte forklare hvorfor ingen lo av vitsen din',
     },
     b: {
-      en: 'Introduce every story with a dramatic title',
-      nb: 'Gi hver historie en dramatisk tittel først',
+      en: 'Have to explain why you laughed at the wrong moment',
+      nb: 'Måtte forklare hvorfor du lo på feil tidspunkt',
     },
   },
   {
@@ -70,12 +70,12 @@ export const PILOT = [
     pack: 0,
     topic: 'travel',
     a: {
-      en: 'Have a suitcase that follows you but complains',
-      nb: 'Ha en koffert som følger etter deg, men klager',
+      en: 'Miss your flight with your best friend',
+      nb: 'Miste flyet sammen med bestevennen din',
     },
     b: {
-      en: 'Have a backpack that gives excellent unsolicited advice',
-      nb: 'Ha en ryggsekk som gir gode råd uten å bli spurt',
+      en: 'Make your flight and leave them behind',
+      nb: 'Rekke flyet og la dem bli igjen',
     },
   },
   {
@@ -83,12 +83,12 @@ export const PILOT = [
     pack: 0,
     topic: 'habits',
     a: {
-      en: 'Get applause every time you finish a chore',
-      nb: 'Få applaus hver gang du fullfører en husoppgave',
+      en: 'Have your flatmate list your worst habits to this group',
+      nb: 'La den du bor med fortelle gruppa om dine verste vaner',
     },
     b: {
-      en: 'Hear a victory song every time you find your keys',
-      nb: 'Høre en seierssang hver gang du finner nøklene',
+      en: 'Have your family tell your most embarrassing childhood story',
+      nb: 'La familien fortelle din flaueste barndomshistorie',
     },
   },
   {
@@ -96,25 +96,25 @@ export const PILOT = [
     pack: 0,
     topic: 'music',
     a: {
-      en: 'Speak in rhyme for your first hour awake',
-      nb: 'Snakke på rim den første timen du er våken',
+      en: 'Let everyone here see your most-played songs',
+      nb: 'La alle her se sangene du spiller mest',
     },
     b: {
-      en: 'Sing your final sentence before bed',
-      nb: 'Synge den siste setningen din før du legger deg',
+      en: 'Let them see the people you search for most',
+      nb: 'La dem se hvem du søker mest etter',
     },
   },
   {
     id: 'wyr-pilot-009',
     pack: 0,
-    topic: 'food',
+    topic: 'relationships',
     a: {
-      en: 'Every sandwich must be a surprise',
-      nb: 'La hvert smørbrød være en overraskelse',
+      en: 'Host a dinner where nobody knows each other',
+      nb: 'Holde en middag der ingen kjenner hverandre',
     },
     b: {
-      en: 'Choose every meal but always eat it cold',
-      nb: 'Velge hvert måltid selv, men alltid spise det kaldt',
+      en: 'Sit between two people who have just broken up',
+      nb: 'Sitte mellom to som nettopp har slått opp',
     },
   },
   {
@@ -122,12 +122,12 @@ export const PILOT = [
     pack: 0,
     topic: 'social',
     a: {
-      en: 'Be famous for an excellent penguin impression',
-      nb: 'Være kjent for en strålende pingvinetterligning',
+      en: 'Be remembered for a brilliant thing you did not do',
+      nb: 'Bli husket for noe genialt du ikke gjorde',
     },
     b: {
-      en: 'Be famous for a terrible but catchy song',
-      nb: 'Være kjent for en elendig, men fengende sang',
+      en: 'Never get credit for your best idea',
+      nb: 'Aldri få æren for din beste idé',
     },
   },
   {
@@ -135,12 +135,12 @@ export const PILOT = [
     pack: 1,
     topic: 'planning',
     a: {
-      en: 'Choose every venue and organise every booking',
-      nb: 'Velge alle stedene og ordne alle bestillingene',
+      en: 'Organise every group trip and get blamed when it goes wrong',
+      nb: 'Organisere alle fellesturer og få skylda når noe går galt',
     },
     b: {
-      en: 'Never organise, but accept every venue the group picks',
-      nb: 'Slippe å organisere, men godta alle stedene gruppa velger',
+      en: 'Never organise but have no say in where you go',
+      nb: 'Aldri organisere, men heller ikke få bestemme hvor dere drar',
     },
   },
   {
@@ -172,14 +172,14 @@ export const PILOT = [
   {
     id: 'wyr-pilot-014',
     pack: 1,
-    topic: 'food',
+    topic: 'relationships',
     a: {
-      en: 'Have one perfect local restaurant',
-      nb: 'Ha én perfekt restaurant i nabolaget',
+      en: 'Get free food forever from a place your ex works at',
+      nb: 'Få gratis mat for alltid et sted eksen jobber',
     },
     b: {
-      en: 'Have a new decent restaurant to try every week',
-      nb: 'Ha en ny, helt grei restaurant å prøve hver uke',
+      en: 'Pay full price everywhere else',
+      nb: 'Betale full pris alle andre steder',
     },
   },
   {
@@ -198,27 +198,27 @@ export const PILOT = [
   {
     id: 'wyr-pilot-016',
     pack: 1,
-    topic: 'learning',
+    topic: 'identity',
     a: {
-      en: 'Be excellent at one instrument',
-      nb: 'Være svært god på ett instrument',
+      en: 'Be amazing at something your friends find embarrassing',
+      nb: 'Være rå på noe vennene dine synes er flaut',
     },
     b: {
-      en: 'Be decent at five instruments',
-      nb: 'Være helt grei på fem instrumenter',
+      en: 'Be average at the thing you care about most',
+      nb: 'Være middels i det du bryr deg mest om',
     },
   },
   {
     id: 'wyr-pilot-017',
     pack: 1,
-    topic: 'timing',
+    topic: 'friendship',
     a: {
-      en: 'Always know exactly how long a queue will take',
-      nb: 'Alltid vite nøyaktig hvor lenge en kø vil ta',
+      en: 'Skip every queue but have your friends wait without you',
+      nb: 'Slippe alle køer, men la vennene dine vente uten deg',
     },
     b: {
-      en: 'Always find a comfortable place to wait',
-      nb: 'Alltid finne et behagelig sted å vente',
+      en: 'Always queue with your friends but miss the start of everything',
+      nb: 'Alltid stå i kø med vennene dine, men gå glipp av starten på alt',
     },
   },
   {
@@ -237,27 +237,27 @@ export const PILOT = [
   {
     id: 'wyr-pilot-019',
     pack: 1,
-    topic: 'habits',
+    topic: 'time',
     a: {
-      en: 'Get an extra hour every morning',
-      nb: 'Få en ekstra time hver morgen',
+      en: 'Have a free extra hour each day that you must spend alone',
+      nb: 'Få en ekstra time hver dag som du må bruke alene',
     },
     b: {
-      en: 'Get an extra hour every evening',
-      nb: 'Få en ekstra time hver kveld',
+      en: 'Give that hour to a friend who is always too busy to meet',
+      nb: 'Gi den timen til en venn som alltid er for opptatt til å møtes',
     },
   },
   {
     id: 'wyr-pilot-020',
     pack: 1,
-    topic: 'social',
+    topic: 'friendship',
     a: {
-      en: 'Be the person everyone asks for practical help',
-      nb: 'Være den alle spør om praktisk hjelp',
+      en: "Be everyone's first call for help but never get invited to the fun stuff",
+      nb: 'Være den alle ber om hjelp, men aldri bli invitert med på det morsomme',
     },
     b: {
-      en: 'Be the person everyone asks for honest advice',
-      nb: 'Være den alle spør om ærlige råd',
+      en: 'Get every invite but have nobody take you seriously',
+      nb: 'Bli invitert med på alt, men ikke bli tatt seriøst av noen',
     },
   },
   {
@@ -289,14 +289,14 @@ export const PILOT = [
   {
     id: 'wyr-pilot-023',
     pack: 2,
-    topic: 'learning',
+    topic: 'social',
     a: {
-      en: 'Speak every language but only in a whisper',
-      nb: 'Snakke alle språk, men bare kunne hviske',
+      en: 'Know exactly what to say but freeze whenever you like someone',
+      nb: 'Vite akkurat hva du skal si, men låse deg helt når du liker noen',
     },
     b: {
-      en: 'Speak two languages with perfect comic timing',
-      nb: 'Snakke to språk med perfekt komisk timing',
+      en: 'Always say something awkward but never feel embarrassed',
+      nb: 'Alltid si noe kleint, men aldri bli flau',
     },
   },
   {
@@ -304,12 +304,12 @@ export const PILOT = [
     pack: 2,
     topic: 'habits',
     a: {
-      en: 'Find everything you lose, but only a year later',
-      nb: 'Finne alt du mister, men først et år senere',
+      en: 'Get back everything you lost, but have every deleted message sent',
+      nb: 'Få tilbake alt du har mistet, men få hver slettede melding sendt',
     },
     b: {
-      en: 'Never lose anything, but always pack twice as much',
-      nb: 'Aldri miste noe, men alltid pakke dobbelt så mye',
+      en: 'Keep losing things but always have someone else pay to replace them',
+      nb: 'Fortsette å miste ting, men alltid la noen andre betale for nye',
     },
   },
   {
@@ -317,12 +317,12 @@ export const PILOT = [
     pack: 2,
     topic: 'music',
     a: {
-      en: 'Hear any concert from the front row once',
-      nb: 'Høre én valgfri konsert fra første rad',
+      en: 'Get front-row tickets to your favourite artist but go with your ex',
+      nb: 'Få billetter på første rad til favorittartisten, men dra med eksen',
     },
     b: {
-      en: 'Hear any rehearsal you want for the rest of your life',
-      nb: 'Høre alle øvinger du vil resten av livet',
+      en: 'Go with your best friend but miss half the show',
+      nb: 'Dra med bestevennen din, men gå glipp av halve konserten',
     },
   },
   {
@@ -343,12 +343,12 @@ export const PILOT = [
     pack: 2,
     topic: 'food',
     a: {
-      en: 'Cook anything perfectly but never repeat a dish',
-      nb: 'Lage alle retter perfekt, men aldri lage samme rett igjen',
+      en: 'Never cook again but let your flatmate pick every meal',
+      nb: 'Aldri lage mat igjen, men la den du bor med velge alle måltidene',
     },
     b: {
-      en: 'Eat your favourite dish perfectly made every day',
-      nb: 'Spise favorittretten din perfekt tilberedt hver dag',
+      en: 'Choose every meal but always cook and clean up alone',
+      nb: 'Velge alle måltidene, men alltid lage mat og rydde alene',
     },
   },
   {

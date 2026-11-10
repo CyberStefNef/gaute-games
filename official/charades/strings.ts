@@ -1,6 +1,6 @@
 export const strings = {
   en: {
-    'Pick a category': 'Pick a category',
+    'It is not your turn.': 'It is not your turn.',
     'Turn {n} of {total}': 'Turn {n} of {total}',
     'Your turn to act, {name}': 'Your turn to act, {name}',
     'Act out each word without speaking. Hide the screen! Hard words score 2.':
@@ -14,14 +14,11 @@ export const strings = {
     Scores: 'Scores',
     Titles: 'Titles',
     star: 'Star actor',
-    'The category is chosen.': 'The category is chosen.',
-    'Choose a category first.': 'Choose a category first.',
     'The turn has started.': 'The turn has started.',
     'Start the turn first.': 'Start the turn first.',
-    'Choose one of the options.': 'Choose one of the options.',
   },
   nb: {
-    'Pick a category': 'Velg en kategori',
+    'It is not your turn.': 'Det er ikke din tur.',
     'Turn {n} of {total}': 'Tur {n} av {total}',
     'Your turn to act, {name}': 'Din tur til å mime, {name}',
     'Act out each word without speaking. Hide the screen! Hard words score 2.':
@@ -35,10 +32,7 @@ export const strings = {
     Scores: 'Poeng',
     Titles: 'Titler',
     star: 'Mimestjerne',
-    'The category is chosen.': 'Kategorien er valgt.',
-    'Choose a category first.': 'Velg en kategori først.',
     'The turn has started.': 'Turen har startet.',
     'Start the turn first.': 'Start turen først.',
-    'Choose one of the options.': 'Velg et av alternativene.',
   },
 } as const;
