@@ -1,0 +1,30 @@
+{
+  "slug": "beer-golf",
+  "name": "Beer Golf",
+  "description": "Play a round of golf through the night. Lowest score wins.",
+  "players": {
+    "min": 2,
+    "max": 16
+  },
+  "modes": ["phones", "shared"],
+  "howToPlay": [
+    "The host picks a rule style (any drink, classic or challenge) and 3, 6 or 9 holes.",
+    "Each hole has a par. Play it, then report your strokes. Water or a soft drink counts the same.",
+    "When everyone has reported, the hole is revealed and your total against par updates.",
+    "You can skip any hole and go at your own pace.",
+    "After the last hole, the lowest total against par wins."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Ølgolf",
+      "description": "En golfrunde gjennom kvelden. Lavest score vinner.",
+      "howToPlay": [
+        "Verten velger regelstil (hva som helst å drikke, klassisk eller utfordring) og 3, 6 eller 9 hull.",
+        "Hvert hull har et par. Spill det og meld inn slagene dine. Vann eller brus teller likt.",
+        "Når alle har meldt inn, vises hullet og summen din mot par oppdateres.",
+        "Du kan hoppe over et hull og ta det i ditt eget tempo.",
+        "Etter siste hull vinner den med lavest sum mot par."
+      ]
+    }
+  }
+}
