@@ -67,6 +67,9 @@ main {
 .phone iframe.shown {
   opacity: 1;
 }
+.gate[hidden] {
+  display: none;
+}
 .gate {
   position: absolute;
   inset: 30px 0 0;
@@ -110,4 +113,11 @@ aside h2 {
 }
 #log li.rejected {
   color: #a34431;
+}
+
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
 }

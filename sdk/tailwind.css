@@ -41,6 +41,10 @@
 @layer base {
   * {
     border-color: var(--border);
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
   }
   body {
     background: var(--background);

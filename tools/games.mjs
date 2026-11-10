@@ -1,6 +1,8 @@
 // Finds, validates and bundles the games in official/. Used by the Vite plugin
 // (simulator and catalogue), the tests and the CI publish step.
 import { createHash } from 'node:crypto';
+import { modelAssets } from './model-assets.mjs';
+import { GAME_LIMITS } from '../sdk/limits.mjs';
 import { sourceImports, validateSourceStyles } from './source-build.mjs';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -10,7 +12,12 @@ import { build } from 'vite-plus';
 import { iconProblem } from '../sdk/icon.mjs';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const LIMITS = { logic: 256 * 1024, client: 512 * 1024, maxPlayers: 16 };
+export const LIMITS = {
+  logic: GAME_LIMITS.logicBytes,
+  client: GAME_LIMITS.clientBytes,
+  code: GAME_LIMITS.codeBytes,
+  maxPlayers: GAME_LIMITS.maxPlayers,
+};
 export const MODES = ['phones', 'pass', 'shared'];
 
 /** Game folders: everything in official/ except helpers such as official/_kit. */
@@ -105,7 +112,11 @@ async function bundle(dir, entry, { page = false, sourceRoot } = {}) {
     configFile: false,
     logLevel: 'silent',
     // Game pages may use Tailwind CSS (`@import 'tailwindcss'`) and React.
-    plugins: [...(sourceRoot ? [sourceImports(sourceRoot)] : []), ...(page ? [tailwindcss()] : [])],
+    plugins: [
+      modelAssets(),
+      ...(sourceRoot ? [sourceImports(sourceRoot)] : []),
+      ...(page ? [tailwindcss()] : []),
+    ],
     css: { postcss: { plugins: [] } },
     define: { 'process.env.NODE_ENV': JSON.stringify('production') },
     // Nested builds in the live simulator inherit NODE_ENV=development. Match
@@ -152,6 +163,8 @@ async function buildGame(slug, folder = path.join(ROOT, 'official', slug), { sou
     throw Error(`official/${slug}: logic is larger than ${LIMITS.logic / 1024} KB`);
   if (Buffer.byteLength(client.script + client.style) > LIMITS.client)
     throw Error(`official/${slug}: client is larger than ${LIMITS.client / 1024} KB`);
+  if (Buffer.byteLength(logic + client.script + client.style) > LIMITS.code)
+    throw Error(`official/${slug}: combined code is larger than ${LIMITS.code / 1024} KB`);
   const hash = createHash('sha256')
     .update([logic, client.script, client.style].join('\0'))
     .digest('hex');

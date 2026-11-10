@@ -7,7 +7,7 @@ export const PROTOCOL = 1;
 /** Largest message a game may send (actions carry at most 16 KB of payload). */
 export const GAME_MESSAGE_LIMIT = 64 * 1024;
 /**
- * Largest message the app sends. It carries a view (the server allows 64 KB each)
+ * Largest message the app sends. It carries a view (the server allows 256 KB each)
  * plus players, theme and escaping, and on phones arrives as one string.
  */
 export const HOST_MESSAGE_LIMIT = 1024 * 1024;

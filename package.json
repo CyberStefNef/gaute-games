@@ -31,7 +31,10 @@
     "./document": "./sdk/document.ts",
     "./react": "./sdk/react.tsx",
     "./tailwind.css": "./sdk/tailwind.css",
-    "./icon": "./sdk/icon.ts"
+    "./icon": "./sdk/icon.ts",
+    "./limits": "./sdk/limits.mjs",
+    "./scene3d": "./sdk/scene3d.ts",
+    "./assets": "./sdk/assets.d.ts"
   },
   "scripts": {
     "new": "node tools/new.mjs",
@@ -40,12 +43,16 @@
     "check": "vp check",
     "test": "vp test"
   },
+  "dependencies": {
+    "three": "0.187.0"
+  },
   "devDependencies": {
     "@jitl/quickjs-singlefile-mjs-release-sync": "0.32.0",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/three": "0.187.0",
     "quickjs-emscripten-core": "0.32.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",

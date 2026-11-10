@@ -1,0 +1,32 @@
+{
+  "slug": "frontier",
+  "name": "Gaute Brewtown",
+  "description": "Build a brewing world on a tiny planet. Explore cloudy districts, run deliveries and take over rival venues.",
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modes": ["phones", "pass"],
+  "howToPlay": [
+    "On separate phones everyone plays at once. Tap Ready to finish your round. The next round starts when everyone is ready.",
+    "Rotate the planet to explore. Gather twice a round, grow ingredients and follow the brewing, logistics and hospitality skill paths.",
+    "Start a recipe at your brewhouse. Fermentation takes several of your turns. Expand for more vessels and build a yeast lab.",
+    "Load ready kegs onto a courier. Explore the hex map, accept a local contract and deliver the requested recipe before its deadline.",
+    "Raid rival venues with supplied crews. Damage halts production. Repair, reinforce, take over breached venues or demolish and rebuild.",
+    "Win by taking every rival venue, or pursue reputation, festival and delivery-network goals. Otherwise score after 24 rounds."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Gaute Brewtown",
+      "description": "Bygg en bryggeverden på en liten planet. Utforsk skyer, lever øl og overta rivalenes steder.",
+      "howToPlay": [
+        "På hver sin telefon spiller alle samtidig. Trykk Klar når du er ferdig. Neste runde starter når alle er klare.",
+        "Roter planeten for å utforske. Sank to ganger per runde, dyrk råvarer og lær ferdigheter innen brygging, logistikk og gjestfrihet.",
+        "Start en oppskrift på bryggeriet. Gjæring tar flere av dine turer. Utvid for flere tanker og bygg et gjærlaboratorium.",
+        "Last ferdige fat på et bud. Utforsk sekskantkartet, ta et lokalt oppdrag og lever riktig oppskrift før fristen.",
+        "Angrip rivalenes steder med forsynte lag. Skade stanser produksjonen. Reparer, forsterk, overta svekkede steder eller riv og gjenoppbygg.",
+        "Vinn ved å ta alle rivalenes steder, eller bygg omdømme, festivaler og leveringsnettverk. Ellers avgjøres det etter 24 runder."
+      ]
+    }
+  }
+}

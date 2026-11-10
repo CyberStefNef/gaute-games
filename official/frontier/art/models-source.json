@@ -1,0 +1,318 @@
+{
+  "source": "frontier-models.blend",
+  "models": [
+    {
+      "name": "meadow",
+      "objects": 16,
+      "location": "art/reference-models/meadow.glb",
+      "sourceVertices": 192,
+      "materials": ["gold.002", "grass.002", "grass2.002", "wood.002"],
+      "bytes": 43288
+    },
+    {
+      "name": "barleyMeadow",
+      "objects": 22,
+      "location": "art/reference-models/barleyMeadow.glb",
+      "sourceVertices": 304,
+      "materials": ["gold.002", "grass2.002", "wood.002"],
+      "bytes": 55712
+    },
+    {
+      "name": "woodland",
+      "objects": 17,
+      "location": "art/reference-models/woodland.glb",
+      "sourceVertices": 179,
+      "materials": ["grass.002", "leaf.002", "leafLight.002", "trunk.002", "wood.002"],
+      "bytes": 40296
+    },
+    {
+      "name": "pineWoodland",
+      "objects": 22,
+      "location": "art/reference-models/pineWoodland.glb",
+      "sourceVertices": 164,
+      "materials": ["grass.002", "leaf.002", "pine.002", "trunk.002", "wood.002"],
+      "bytes": 35628
+    },
+    {
+      "name": "hill",
+      "objects": 5,
+      "location": "art/reference-models/hill.glb",
+      "sourceVertices": 60,
+      "materials": ["grass.002", "grass2.002", "grassEdge.002", "stone.002", "wood.002"],
+      "bytes": 13644
+    },
+    {
+      "name": "spring",
+      "objects": 13,
+      "location": "art/reference-models/spring.glb",
+      "sourceVertices": 131,
+      "materials": [
+        "leaf.002",
+        "leafLight.002",
+        "pine.002",
+        "stone.002",
+        "trunk.002",
+        "water.002",
+        "wave.002"
+      ],
+      "bytes": 30648
+    },
+    {
+      "name": "water",
+      "objects": 6,
+      "location": "art/reference-models/water.glb",
+      "sourceVertices": 56,
+      "materials": ["pine.002", "water.002", "wave.002"],
+      "bytes": 11168
+    },
+    {
+      "name": "hopGrove",
+      "objects": 32,
+      "location": "art/reference-models/hopGrove.glb",
+      "sourceVertices": 403,
+      "materials": [
+        "cloth.002",
+        "grass.002",
+        "hop.001",
+        "leaf.002",
+        "leafLight.002",
+        "trunk.002",
+        "wood.002"
+      ],
+      "bytes": 83992
+    },
+    {
+      "name": "brewery",
+      "objects": 18,
+      "location": "art/reference-models/brewery.glb",
+      "sourceVertices": 266,
+      "materials": [
+        "copper.001",
+        "copperLight.001",
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "metal.002",
+        "roof.002",
+        "trim.002",
+        "wall.002",
+        "wood.002"
+      ],
+      "bytes": 45448
+    },
+    {
+      "name": "brewhouse",
+      "objects": 34,
+      "location": "art/reference-models/brewhouse.glb",
+      "sourceVertices": 504,
+      "materials": [
+        "copper.001",
+        "copperLight.001",
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "metal.002",
+        "roof.002",
+        "trim.002",
+        "wall.002",
+        "wood.002"
+      ],
+      "bytes": 82288
+    },
+    {
+      "name": "taproom",
+      "objects": 24,
+      "location": "art/reference-models/taproom.glb",
+      "sourceVertices": 320,
+      "materials": [
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "metal.002",
+        "roof.002",
+        "roofLight.002",
+        "trim.002",
+        "wall.002",
+        "wood.002"
+      ],
+      "bytes": 54296
+    },
+    {
+      "name": "festival",
+      "objects": 26,
+      "location": "art/reference-models/festival.glb",
+      "sourceVertices": 411,
+      "materials": [
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "metal.002",
+        "roofLight.002",
+        "trim.002",
+        "wood.002"
+      ],
+      "bytes": 64312
+    },
+    {
+      "name": "warehouse",
+      "objects": 24,
+      "location": "art/reference-models/warehouse.glb",
+      "sourceVertices": 342,
+      "materials": [
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "metal.002",
+        "roof.002",
+        "trim.002",
+        "wall.002",
+        "wood.002"
+      ],
+      "bytes": 54156
+    },
+    {
+      "name": "beerGarden",
+      "objects": 34,
+      "location": "art/reference-models/beerGarden.glb",
+      "sourceVertices": 434,
+      "materials": [
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "leaf.002",
+        "leafLight.002",
+        "trim.002",
+        "trunk.002",
+        "wood.002"
+      ],
+      "bytes": 80488
+    },
+    {
+      "name": "yeastLab",
+      "objects": 15,
+      "location": "art/reference-models/yeastLab.glb",
+      "sourceVertices": 174,
+      "materials": [
+        "cloth.002",
+        "copper.001",
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "roof.002",
+        "roofLight.002",
+        "trim.002",
+        "wall.002",
+        "wave.002",
+        "wood.002"
+      ],
+      "bytes": 35768
+    },
+    {
+      "name": "hopTrellis",
+      "objects": 56,
+      "location": "art/reference-models/hopTrellis.glb",
+      "sourceVertices": 720,
+      "materials": ["cloth.002", "grass.002", "hop.001", "leaf.002", "wood.002"],
+      "bytes": 147324
+    },
+    {
+      "name": "barleyField",
+      "objects": 53,
+      "location": "art/reference-models/barleyField.glb",
+      "sourceVertices": 736,
+      "materials": ["gold.002", "grass.002", "soil.002", "wood.002"],
+      "bytes": 133436
+    },
+    {
+      "name": "well",
+      "objects": 13,
+      "location": "art/reference-models/well.glb",
+      "sourceVertices": 206,
+      "materials": [
+        "dark.002",
+        "grass.002",
+        "metal.002",
+        "roof.002",
+        "stone.002",
+        "trim.002",
+        "water.002",
+        "wood.002"
+      ],
+      "bytes": 32148
+    },
+    {
+      "name": "kegs",
+      "objects": 22,
+      "location": "art/reference-models/kegs.glb",
+      "sourceVertices": 376,
+      "materials": ["dark.002", "grass.002", "metal.002", "trim.002", "wood.002"],
+      "bytes": 54364
+    },
+    {
+      "name": "brewer",
+      "objects": 15,
+      "location": "art/reference-models/brewer.glb",
+      "sourceVertices": 204,
+      "materials": [
+        "cloth.002",
+        "dark.002",
+        "grass.002",
+        "metal.002",
+        "roof.002",
+        "skin.002",
+        "trim.002",
+        "wood.002"
+      ],
+      "bytes": 40668
+    },
+    {
+      "name": "builder",
+      "objects": 10,
+      "location": "art/reference-models/builder.glb",
+      "sourceVertices": 100,
+      "materials": [
+        "cloth.002",
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "leaf.002",
+        "skin.002",
+        "wood.002"
+      ],
+      "bytes": 27284
+    },
+    {
+      "name": "surveyor",
+      "objects": 13,
+      "location": "art/reference-models/surveyor.glb",
+      "sourceVertices": 160,
+      "materials": [
+        "cloth.002",
+        "dark.002",
+        "gold.002",
+        "grass.002",
+        "leaf.002",
+        "sand.002",
+        "skin.002",
+        "wood.002"
+      ],
+      "bytes": 34476
+    },
+    {
+      "name": "cargoBike",
+      "objects": 25,
+      "location": "art/reference-models/cargoBike.glb",
+      "sourceVertices": 448,
+      "materials": ["dark.002", "grass.002", "metal.002", "roofLight.002", "trim.002", "wood.002"],
+      "bytes": 71784
+    },
+    {
+      "name": "deliveryCart",
+      "objects": 25,
+      "location": "art/reference-models/deliveryCart.glb",
+      "sourceVertices": 448,
+      "materials": ["dark.002", "grass.002", "metal.002", "trim.002", "wood.002"],
+      "bytes": 69712
+    }
+  ]
+}

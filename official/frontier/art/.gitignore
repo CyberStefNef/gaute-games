@@ -1,0 +1,6 @@
+__pycache__/
+*.log
+renders/
+contact-sheet.png
+desktop-review.png
+review.html

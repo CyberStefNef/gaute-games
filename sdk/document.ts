@@ -1,3 +1,5 @@
+import { scene3dDocument } from './scene3d-document';
+import { GAME_LIMITS } from './limits.mjs';
 import { themeVariables, type Theme } from './protocol';
 import { RUNTIME_PRELUDE } from './runtime';
 
@@ -28,6 +30,7 @@ const inert = (code: string, tag: 'script' | 'style') =>
 // tap flashes, callouts, text inflation or overscroll. Games override freely;
 // `--font-sans` matches Tailwind's and shadcn/ui's font variable.
 const BASE = [
+  '*{scrollbar-width:none}*::-webkit-scrollbar{display:none}',
   ':root{--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}',
   'html,body{margin:0;min-height:100%;background:var(--background);color:var(--foreground);',
   'font-family:var(--font-sans);',
@@ -60,24 +63,26 @@ export function gameDocument(
   const tokens = Object.entries(themeVariables(theme))
     .map(([name, value]) => `${name}:${value}`)
     .join(';');
-  return [
-    '<!doctype html>',
-    `<html lang="${lang === 'nb' ? 'nb' : 'en'}"${theme.dark ? ' class="dark"' : ''}`,
-    ` style="color-scheme:${theme.dark ? 'dark' : 'light'};${escapeAttribute(tokens)}">`,
-    '<head>',
-    `<meta http-equiv="Content-Security-Policy" content="${POLICY}">`,
-    '<meta charset="utf-8">',
-    '<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">',
-    '<meta name="referrer" content="no-referrer">',
-    '<meta name="format-detection" content="telephone=no,email=no,address=no">',
-    `<style>${BASE}</style>`,
-    `<style>${inert(client.style, 'style')}</style>`,
-    '</head>',
-    '<body><div id="app"></div>',
-    `<script>${REPORT_FAILURE}</script>`,
-    `<script>${inert(client.script, 'script')}</script>`,
-    '</body></html>',
-  ].join('');
+  return scene3dDocument(
+    [
+      '<!doctype html>',
+      `<html lang="${lang === 'nb' ? 'nb' : 'en'}"${theme.dark ? ' class="dark"' : ''}`,
+      ` style="color-scheme:${theme.dark ? 'dark' : 'light'};${escapeAttribute(tokens)}">`,
+      '<head>',
+      `<meta http-equiv="Content-Security-Policy" content="${POLICY}">`,
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">',
+      '<meta name="referrer" content="no-referrer">',
+      '<meta name="format-detection" content="telephone=no,email=no,address=no">',
+      `<style>${BASE}</style>`,
+      `<style>${inert(client.style, 'style')}</style>`,
+      '</head>',
+      '<body><div id="app"></div>',
+      `<script>${REPORT_FAILURE}</script>`,
+      `<script>${inert(client.script, 'script')}</script>`,
+      '</body></html>',
+    ].join(''),
+  );
 }
 
 /**
@@ -95,7 +100,17 @@ export function gameRulesDocument(logic: string) {
     if (typeof message === 'string') { try { message = JSON.parse(message); } catch { return; } }
     if (!message || message.gaute !== 1 || message.type !== 'run' || typeof message.request !== 'string') return;
     try {
-      post({ gaute: 1, type: 'ran', id: message.id, outcome: __dispatch(message.request) });
+      const outcome = __dispatch(message.request);
+      const decoded = JSON.parse(outcome);
+      const bytes = value => new TextEncoder().encode(value).length;
+      if (decoded.ok && decoded.state !== undefined) {
+        if (bytes(decoded.state) > ${GAME_LIMITS.stateBytes}) throw new Error('Game state exceeds its size limit');
+        for (const view of Object.values(decoded.views))
+          if (bytes(view) > ${GAME_LIMITS.viewBytes}) throw new Error('A player view exceeds its size limit');
+        if (decoded.ended !== undefined && bytes(decoded.ended) > ${GAME_LIMITS.resultBytes})
+          throw new Error('The game result exceeds its size limit');
+      }
+      post({ gaute: 1, type: 'ran', id: message.id, outcome });
     } catch (error) {
       post({ gaute: 1, type: 'ran', id: message.id, failed: String(error && error.message || error).slice(0, 300) });
     }
