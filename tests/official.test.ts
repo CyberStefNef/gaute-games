@@ -15,6 +15,7 @@ type Played = {
 /** Plays one game in order, as the app does. */
 async function session(slug: string, mode: Mode, players: string[], seed = 9) {
   const { logic } = await bundleGame(slug);
+  players = [...players];
   let current = (await runGame(logic, {
     op: 'setup',
     mode,
@@ -29,6 +30,20 @@ async function session(slug: string, mode: Mode, players: string[], seed = 9) {
     view,
     get current() {
       return current;
+    },
+    async leave(playerId: string) {
+      players = players.filter((p) => p !== playerId);
+      const outcome = (await runGame(logic, {
+        op: 'leave',
+        mode,
+        state: current.state,
+        players,
+        playerId,
+        seed: seed + ++step,
+      })) as Played & Outcome;
+      expect(outcome.ok).toBe(true);
+      if (outcome.ok) current = outcome;
+      return outcome;
     },
     async act(playerId: string | null, action: string, payload: unknown = null) {
       const outcome = (await runGame(logic, {
@@ -211,6 +226,116 @@ test('Bluff hides who wrote what until the reveal, and scores the truth and ever
   await game.act('p2', 'vote', { value: index('Pancake') });
   await game.act('p3', 'vote', { value: index('Pancake') });
   expect(game.view('p1').phase).toBe('reveal');
+  expect(game.view('p1').scores).toEqual({ p1: 0, p2: 0, p3: 0 });
+  expect(game.view('p1').options.every((o: { truth: boolean }) => !o.truth)).toBe(true);
+  expect(game.view('p1').awards).toEqual([]);
+  expect((await game.act('p2', 'showAll')).ok).toBe(false);
+  expect((await game.act('p1', 'next')).ok).toBe(false);
+  for (let i = 0; i < options.length - 1; i++) {
+    expect((await game.act('p1', 'showNext')).ok).toBe(true);
+    const shown = game.view('p2').options.filter((o: { revealed: boolean }) => o.revealed);
+    expect(shown).toHaveLength(i + 1);
+    expect(shown.every((o: { truth: boolean }) => !o.truth)).toBe(true);
+    expect(game.view('p2').scores).toEqual({ p1: 0, p2: 0, p3: 0 });
+  }
+  await game.act('p1', 'showNext');
+  expect(game.view('p1').revealComplete).toBe(true);
+  expect(game.view('p1').options[truth].truth).toBe(true);
   // p1 found the truth (2) and fooled two players (2).
   expect(game.view('p1').scores).toEqual({ p1: 4, p2: 0, p3: 0 });
+});
+
+test('Never Have I Ever keeps everyone answering through ten rounds, including after five confessions', async () => {
+  const players = ['p1', 'p2', 'p3'];
+  const game = await session('never-have-i-ever', 'phones', players);
+  await game.act('p1', 'addOwn', { text: 'tried this synthetic test prompt.' });
+  await game.act('p1', 'pick', { value: 0 });
+  expect(game.view('p2').statement).toBe('tried this synthetic test prompt.');
+  for (let round = 1; round <= 10; round++) {
+    expect(game.view('p1').round).toBe(round);
+    expect(game.current.ended).toBeUndefined();
+    expect((await game.act('p1', 'answer', { value: 1 })).ok).toBe(true);
+    expect(game.view('p2').haveDone).toEqual([]);
+    await game.act('p2', 'answer', { value: 0 });
+    await game.act('p3', 'answer', { value: 0 });
+    expect(game.view('p1').storyTime).toBe('p1');
+    expect(game.view('p1').have.p1).toBe(round);
+    await game.act('p1', 'next');
+  }
+  expect(JSON.parse(game.current.ended!)).toMatchObject({ have: { p1: 10 } });
+  expect(game.view('p1').awards).toContainEqual({ title: 'storyteller', player: 'p1', count: 10 });
+});
+
+test('Never Have I Ever shared play finishes after ten prompts, and departures unblock answers', async () => {
+  const shared = await session('never-have-i-ever', 'shared', ['p1', 'p2']);
+  await shared.act(null, 'pick', { value: 2 });
+  for (let i = 0; i < 10; i++) await shared.act(null, 'next');
+  expect(shared.current.ended).toBeDefined();
+  const phones = await session('never-have-i-ever', 'phones', ['p1', 'p2', 'p3']);
+  await phones.act('p1', 'pick', { value: 0 });
+  await phones.act('p1', 'answer', { value: 1 });
+  await phones.act('p2', 'answer', { value: 0 });
+  await phones.leave('p3');
+  expect(phones.view('p1').revealed).toBe(true);
+  expect(phones.view('p1').inPlay).toBe(2);
+});
+
+const statements = (player: string) => ({
+  statements: [`${player} truth one`, `${player} truth two`, `${player} lie`],
+  lie: 2,
+});
+
+test('Two Truths prepares simultaneously, keeps future stories secret, and scores each teller', async () => {
+  const players = ['p1', 'p2', 'p3'];
+  const game = await session('two-truths', 'phones', players);
+  for (const player of ['p3', 'p1']) {
+    expect((await game.act(player, 'submit', statements(player))).ok).toBe(true);
+    expect(game.view('p2').phase).toBe('write');
+    expect(game.view('p2').statements).toEqual([]);
+    expect(JSON.stringify(game.view('p2'))).not.toContain('p3 truth one');
+  }
+  await game.act('p2', 'submit', statements('p2'));
+  expect(game.view('p2').lie).toBeNull();
+  for (const teller of players) {
+    expect(game.view(teller).phase).toBe('guess');
+    expect(game.view(teller).teller).toBe(teller);
+    expect(game.view(teller).statements).toEqual(statements(teller).statements);
+    expect((await game.act(teller, 'guess', { value: 2 })).ok).toBe(false);
+    for (const guesser of players.filter((p) => p !== teller))
+      await game.act(guesser, 'guess', { value: 2 });
+    expect(game.view('p1').phase).toBe('reveal');
+    await game.act(teller, 'next');
+  }
+  expect(JSON.parse(game.current.ended!)).toEqual({ scores: { p1: 2, p2: 2, p3: 2 } });
+});
+
+test('Two Truths handles a departure during preparation and during presentation', async () => {
+  const game = await session('two-truths', 'phones', ['p1', 'p2', 'p3', 'p4']);
+  for (const player of ['p1', 'p2', 'p3']) await game.act(player, 'submit', statements(player));
+  await game.leave('p4');
+  expect(game.view('p2').phase).toBe('guess');
+  await game.leave('p1');
+  expect(game.view('p2').teller).toBe('p2');
+  expect(game.view('p3').statements).toEqual(statements('p2').statements);
+  expect(game.view('p3').lie).toBeNull();
+});
+
+test('Bluff early transitions belong to the round leader and transfer when they leave', async () => {
+  const game = await session('bluff', 'phones', ['p1', 'p2', 'p3', 'p4']);
+  await game.act('p2', 'write', { text: 'Pancake' });
+  await game.act('p3', 'write', { text: 'Sausage' });
+  expect((await game.act('p2', 'hunt')).ok).toBe(false);
+  expect((await game.act('p1', 'hunt')).ok).toBe(true);
+  const choices = game.view('p4').options;
+  await game.act('p4', 'vote', {
+    value: choices.findIndex((o: { text: string }) => o.text === 'Pancake'),
+  });
+  expect((await game.act('p4', 'reveal')).ok).toBe(false);
+  await game.leave('p1');
+  expect(game.view('p2').leader).toBe('p2');
+  expect((await game.act('p2', 'reveal')).ok).toBe(true);
+  expect((await game.act('p2', 'showAll')).ok).toBe(true);
+  expect(game.view('p3').revealComplete).toBe(true);
+  expect((await game.act('p2', 'next')).ok).toBe(true);
+  expect(game.view('p3').round).toBe(2);
 });

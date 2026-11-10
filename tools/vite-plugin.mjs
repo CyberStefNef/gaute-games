@@ -3,17 +3,23 @@
 import path from 'node:path';
 import { buildCatalogue, ROOT } from './games.mjs';
 
-export function gauteGames() {
+export function gauteGames(options = {}) {
   return {
     name: 'gaute-games',
     configureServer(server) {
-      server.watcher.add(path.join(ROOT, 'games'));
+      const watched = [
+        path.join(ROOT, 'official'),
+        path.join(ROOT, 'sdk'),
+        path.join(ROOT, 'index'),
+        ...(options.localGames ?? []).map((game) => game.folder),
+      ];
+      server.watcher.add(watched);
       server.watcher.on('change', (file) => {
-        if (file.startsWith(path.join(ROOT, 'games')) || file.startsWith(path.join(ROOT, 'sdk')))
+        if (watched.some((dir) => file.startsWith(dir + path.sep)))
           server.ws.send({ type: 'full-reload' });
       });
       server.middlewares.use('/catalogue.json', (_req, res) => {
-        buildCatalogue().then(
+        buildCatalogue(options).then(
           (json) => {
             res.setHeader('content-type', 'application/json');
             res.setHeader('cache-control', 'no-store');
@@ -31,7 +37,7 @@ export function gauteGames() {
       this.emitFile({
         type: 'asset',
         fileName: 'catalogue.json',
-        source: await buildCatalogue({ commit: process.env.GITHUB_SHA ?? 'local' }),
+        source: await buildCatalogue({ ...options, commit: process.env.GITHUB_SHA ?? 'local' }),
       });
     },
   };

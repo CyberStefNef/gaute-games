@@ -20,37 +20,119 @@ A game is a small web app in two parts. **Rules** (`logic.ts`) decide what happe
 and what each player may see; Gaute runs them in a sandbox. **The screen**
 (`client.tsx`) is an ordinary web page. The template uses React and Tailwind CSS,
 whose `bg-primary`, `text-muted-foreground` and other colours follow the app's
-theme in light and dark mode; plain DOM, Svelte, canvas or anything else works
-too. Gaute shows it inside the app with the app's fonts and no network access.
+theme in light and dark mode. Plain DOM and canvas work too. Central source
+builds use the approved SDK, React and Tailwind imports. Gaute shows it inside the app with the app's fonts and no network access.
 
 ## Make a game
 
-Requires Node 24 and [Vite+](https://viteplus.dev) (installed with the dependencies).
+Use Node 24 and npm. Create a standalone project without cloning this repository:
 
 ```sh
-npm ci
-npm run new -- my-game     # copies template/ to games/my-game
-vp dev                     # simulator at http://localhost:4800 — pick your game
-vp test                    # plays every game in every mode through Gaute's sandbox
-vp check                   # format, lint and types
+npx --package=git+https://github.com/CyberStefNef/gaute-games.git gaute-game new my-game
+cd my-game
+npm install
+npm run dev                # simulator, with just your game
+npm run check              # formatting, lint, types and sandbox playtest
+npm run build              # local preview bundle in ignored dist/
 ```
 
-Using an AI coding tool? Point it at [AGENTS.md](AGENTS.md); it has the rules.
+Commit the generated `package-lock.json` and use `npm ci` after setup. Keep your
+source and lockfile in your own public repository. CI builds the pinned source;
+creators do not upload generated bundles or binaries. Submit its URL and
+full commit hash in `index/my-game.json`; see [CONTRIBUTING.md](CONTRIBUTING.md).
+The SDK command becomes available after this tooling release is merged.
+
+Using an AI coding tool? Point it at [AGENTS.md](AGENTS.md) for the game contract.
+Maintainers working on official games can still run `npm run new -- my-game`
+here, then use `npm run dev`, `npm run check` and `npm test`.
+
+## Group playtest
+
+Run `npm run dev` to open the simulator at http://localhost:4800. Use synthetic
+names. These changes need a real group playtest before we can judge the fun.
+The simulator gives each player a separate screen; check own-phone interaction
+in the Gaute app after the reviewed catalogue release as well.
+
+Try Never Have I Ever, Two Truths and a Lie, then Bluff with 3–6 people:
+
+- Never Have I Ever: finish ten rounds, including at least six “I have” answers
+  from one player. Everyone should still participate. Stories are optional.
+- Two Truths: everyone prepares together. Check that each player's statements
+  stay private until their turn and that later turns start without more writing.
+- Bluff: let the round leader reveal answers individually, then try Show all
+  answers. Check that another player cannot reveal early. If the leader leaves,
+  the next remaining player takes over.
+
+Have someone unfamiliar with the rules start each game. Note where they need
+help, where players wait or lose interest, and which reveals start a conversation.
+After each game, ask whether the group wants another round and what they would
+change. Record observations separately from suggestions. Check English and
+Norwegian, light and dark themes, and both shared and own-phone play where
+supported. Simulator evidence does not replace Android and iOS device checks.
+
+## Question content pilot
+
+The four `official/*/pilot.ts` files contain the original bilingual content pilot:
+30 Would You Rather dilemmas, 30 Never Have I Ever statements, 15 truths,
+15 dares and ten Bluff facts. Each entry has a permanent ID and topic. Facts
+also include a reveal explanation, primary source URL and source-check date.
+Keep IDs when editing wording. Check factual answers and their accepted aliases
+in both languages. The pilot is ready for playtesting; it has no player ratings
+yet and has not been validated with a real group.
+
+For editorial review, try answering each prompt before accepting it. Dilemmas
+need a reason to choose either side. Statements should invite a recognisable
+incident or a short story. Dares should work seated, without equipment or
+access to anyone's messages. A Bluff fact needs several plausible fake answers
+and a source that supports the exact wording. Review Norwegian for natural
+phrasing and playable answers, rather than matching English word for word.
+
+The host can restore private `content` history through a single reserved
+`restoreContent` action before showing setup views. Games record only displayed
+catalogue IDs, including skipped cards. They choose unseen cards first and reuse
+the least recently shown cards after exhaustion. Older hosts still run these
+games, but cannot remember earlier sessions. The local simulator also starts
+each Restart with fresh history; sandbox tests cover repeated sessions.
+
+During the group pilot, play two games from the same pack, note confusing or
+flat prompts by their IDs, and ask which questions started a story, disagreement
+or performance. Test each language separately. Skips are observations, not an
+automatic reason to remove a card. The host integration in Gaute keeps at most
+512 IDs per game and eight games per evening. Custom prompts, answers and names
+never enter that history.
 
 ## Publish
 
-Open a pull request that adds `games/<your-game>/`. CI builds it, plays it in
-every mode it declares and checks determinism and size limits. After review and
-merge, it is signed and published, and Gaute picks it up within minutes. See
-[CONTRIBUTING.md](CONTRIBUTING.md).
+Add `index/<slug>.json` with `repo` and a full `commit` hash. An optional `path` selects a source folder inside the pinned repository.
+CI fetches and builds that source with our toolchain, then validates and
+sandbox-tests it alongside the official games. Owner
+review and a merge publish the signed catalogue Gaute already imports. Updating
+your own repository does not update the pin. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Official game layout
+
+Official games live in `official/<slug>/`, separately from the community
+repository index. Each game keeps these concerns together in its own folder:
+
+- `logic.ts` defines setup, validated actions and player views.
+- `client.tsx` renders the game.
+- `content.ts` contains its questions, word packs or cards, where applicable.
+- `strings.ts` contains English and Norwegian interface text.
+- `pilot.ts` holds the new question pilot and fact sources, where applicable.
+- `manifest.json` and `icon.svg` describe the catalogue entry.
+
+Werewolves also separates state types into `state.ts` and phase transitions into
+`round.ts`. The reusable official controls and rules helpers live in
+`official/_kit/`. Community creators use their own repositories and `index/` pins.
 
 ## Repository
 
 | Path         | What                                                          |
 | ------------ | ------------------------------------------------------------- |
 | `sdk/`       | `@gaute/games-sdk`: rules, page client, React, Tailwind theme |
-| `games/`     | Published games (official ones included); `_kit` is shared UI |
-| `template/`  | Starting point for `npm run new`                              |
+| `official/`  | Official games; `_kit` is their shared UI                     |
+| `index/`     | Community repository URLs and reviewed commit pins            |
+| `template/`  | Starting point for standalone projects and official games     |
 | `tests/`     | Checks every game must pass                                   |
 | `tools/`     | Bundling, sandbox, catalogue signing, Vite plugin             |
 | `simulator/` | The local multi-phone simulator                               |

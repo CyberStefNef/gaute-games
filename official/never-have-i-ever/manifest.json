@@ -1,0 +1,28 @@
+{
+  "slug": "never-have-i-ever",
+  "name": "Never Have I Ever",
+  "description": "Confess what you’ve done, or keep a straight face.",
+  "players": {
+    "min": 2,
+    "max": 16
+  },
+  "modes": ["phones", "shared"],
+  "howToPlay": [
+    "Pick a pack, and add your own statements if you like.",
+    "Play ten rounds. Everyone stays in and answers each statement.",
+    "If you’re the only one who has, you can tell the story. Finish with titles for the group.",
+    "On one phone, answer out loud and tell the stories."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Jeg har aldri",
+      "description": "Innrøm hva du har gjort, eller hold maska.",
+      "howToPlay": [
+        "Velg en pakke, og legg gjerne til egne påstander.",
+        "Spill ti runder. Alle er med og svarer på hver påstand.",
+        "Er du den eneste som har, kan du fortelle historien. Avslutt med titler til gruppa.",
+        "På én telefon svarer dere høyt og forteller historiene."
+      ]
+    }
+  }
+}

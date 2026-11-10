@@ -2,7 +2,7 @@
 // the shared runtime prelude, and the same memory, CPU and output limits.
 import { newQuickJSWASMModuleFromVariant } from 'quickjs-emscripten-core';
 import variant from '@jitl/quickjs-singlefile-mjs-release-sync';
-import { RUNTIME_PRELUDE } from '../sdk/runtime.ts';
+import { RUNTIME_PRELUDE } from '../sdk/runtime-prelude.mjs';
 
 export const SANDBOX_LIMITS = {
   memoryBytes: 16 * 1024 * 1024,

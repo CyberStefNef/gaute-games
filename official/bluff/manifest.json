@@ -1,0 +1,28 @@
+{
+  "slug": "bluff",
+  "name": "Bluff",
+  "description": "Fake an answer to a strange fact. Find the truth.",
+  "players": {
+    "min": 3,
+    "max": 10
+  },
+  "modes": ["phones"],
+  "howToPlay": [
+    "Each round shows a strange but true fact with a blank.",
+    "Everyone writes a fake answer that sounds true.",
+    "Then find the real answer among the fakes: the truth scores 2, and every player your fake fools scores you 1.",
+    "The first player leads the round and reveals the fakes one by one, then the truth. They can show all answers to speed things up."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Bløff",
+      "description": "Finn på et svar til et rart faktum. Finn sannheten.",
+      "howToPlay": [
+        "Hver runde viser et rart, men sant faktum med et hull.",
+        "Alle skriver et falskt svar som høres sant ut.",
+        "Så finner dere det ekte svaret blant de falske: sannheten gir 2 poeng, og hver spiller ditt svar lurer, gir deg 1.",
+        "Den første spilleren leder runden og viser bløffene én etter én, så sannheten. De kan vise alle svarene for å gå raskere videre."
+      ]
+    }
+  }
+}
