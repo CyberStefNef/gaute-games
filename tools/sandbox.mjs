@@ -4,14 +4,8 @@ import { newQuickJSWASMModuleFromVariant } from 'quickjs-emscripten-core';
 import variant from '@jitl/quickjs-singlefile-mjs-release-sync';
 import { RUNTIME_PRELUDE } from '../sdk/runtime-prelude.mjs';
 
-export const SANDBOX_LIMITS = {
-  memoryBytes: 16 * 1024 * 1024,
-  stackBytes: 512 * 1024,
-  interrupts: 200,
-  stateBytes: 256 * 1024,
-  viewBytes: 64 * 1024,
-  resultBytes: 4 * 1024,
-};
+import { GAME_LIMITS } from '../sdk/limits.mjs';
+export const SANDBOX_LIMITS = GAME_LIMITS;
 
 export class GameFailure extends Error {}
 
@@ -60,10 +54,12 @@ export function runGame(logic, request) {
     const output = JSON.parse(invoke(vm, fail, '__dispatch', JSON.stringify(request)));
     if (!output.ok || output.unsupported) return output;
     if (bytes(output.state) > SANDBOX_LIMITS.stateBytes)
-      throw new GameFailure('state is larger than 256 KB');
+      throw new GameFailure(`state is larger than ${SANDBOX_LIMITS.stateBytes / 1024} KB`);
     for (const [viewer, view] of Object.entries(output.views))
       if (bytes(view) > SANDBOX_LIMITS.viewBytes)
-        throw new GameFailure(`view for ${viewer} is larger than 64 KB`);
+        throw new GameFailure(
+          `view for ${viewer} is larger than ${SANDBOX_LIMITS.viewBytes / 1024} KB`,
+        );
     if (output.ended !== undefined && bytes(output.ended) > SANDBOX_LIMITS.resultBytes)
       throw new GameFailure('result is larger than 4 KB');
     return output;

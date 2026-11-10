@@ -1,6 +1,7 @@
 // The SDK's contract with the Gaute app: message validation, the game page and
 // the rules runtime.
 import { expect, test } from 'vite-plus/test';
+import { GAME_LIMITS } from '../sdk/limits.mjs';
 import { runGame } from '../tools/sandbox.mjs';
 import { gameDocument } from '../sdk/document.ts';
 import {
@@ -14,7 +15,7 @@ import {
 const theme = { dark: false, colors: {}, radius: '0.5rem' } as Theme;
 
 test('the largest view the server allows still reaches a game as one string', () => {
-  const view = { text: 'x'.repeat(64 * 1024 - 20) };
+  const view = { text: 'x'.repeat(GAME_LIMITS.viewBytes - 20) };
   const snapshot = { mode: 'phones', status: 'playing', version: 1, you: 'p1', players: [], view };
   const sent = JSON.stringify({ gaute: PROTOCOL, type: 'init', locale: 'en', theme, snapshot });
   expect(sent.length).toBeGreaterThan(GAME_MESSAGE_LIMIT);
@@ -135,4 +136,45 @@ test('games can ask Gaute to react, with known reactions only', () => {
     reaction: 'celebrate',
   });
   expect(parseGameMessage({ gaute: PROTOCOL, type: 'companion', reaction: 'dance' })).toBeNull();
+});
+
+test('expanded default budgets accept richer state and views without a manifest profile', async () => {
+  const logic = `__gaute.defineGame({setup:()=>({text:'x'.repeat(400*1024)}),actions:{},view:s=>({text:s.text.slice(0,180*1024)})});`;
+  const result = await runGame(logic, {
+    op: 'setup',
+    mode: 'phones',
+    players: ['p1', 'p2'],
+    locale: 'en',
+    seed: 1,
+  });
+  expect(result.ok && 'state' in result).toBe(true);
+  if (result.ok && 'state' in result) {
+    expect(result.state.length).toBeGreaterThan(256 * 1024);
+    expect(result.views.p1.length).toBeGreaterThan(64 * 1024);
+  }
+});
+
+test('expanded budgets still reject excess state and views and interrupt runaway logic', async () => {
+  const setup = {
+    op: 'setup' as const,
+    mode: 'phones' as const,
+    players: ['p1'],
+    locale: 'en',
+    seed: 1,
+  };
+  await expect(
+    runGame(
+      `__gaute.defineGame({setup:()=>({text:'x'.repeat(${GAME_LIMITS.stateBytes})}),actions:{},view:()=>null});`,
+      setup,
+    ),
+  ).rejects.toThrow(/state is larger/);
+  await expect(
+    runGame(
+      `__gaute.defineGame({setup:()=>({}),actions:{},view:()=>({text:'x'.repeat(${GAME_LIMITS.viewBytes})})});`,
+      setup,
+    ),
+  ).rejects.toThrow(/view.*larger/);
+  await expect(
+    runGame(`__gaute.defineGame({setup:()=>{for(;;){}},actions:{},view:()=>null});`, setup),
+  ).rejects.toThrow(/interrupted/);
 });

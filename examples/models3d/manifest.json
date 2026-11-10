@@ -1,0 +1,24 @@
+{
+  "slug": "models3d",
+  "name": "Brewtown 3D workshop",
+  "description": "A playable SDK prototype with original GLB models, animation, picking and movement.",
+  "players": {
+    "min": 2,
+    "max": 4
+  },
+  "modes": ["phones", "pass"],
+  "howToPlay": [
+    "Take turns tapping a neighbouring meadow to move the brewer.",
+    "Each move uses the real game rules. Complete six moves to finish the workshop."
+  ],
+  "translations": {
+    "nb": {
+      "name": "Brewtown 3D-verksted",
+      "description": "En spillbar SDK-prototype med originale GLB-modeller, animasjon, valg og bevegelse.",
+      "howToPlay": [
+        "Bytt på å trykke på en naboeng for å flytte bryggeren.",
+        "Hvert trekk bruker spillreglene. Fullfør seks trekk for å avslutte verkstedet."
+      ]
+    }
+  }
+}

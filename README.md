@@ -138,3 +138,25 @@ Werewolves also separates state types into `state.ts` and phase transitions into
 | `simulator/` | The local multi-phone simulator                               |
 
 MIT licensed. Gaute itself is a separate, private application.
+
+## 3D models
+
+Import offline GLB assets and create a host-owned scene with
+`@gaute/games-sdk/scene3d`. Three.js is shared by the host and does not consume
+each game's code budget. Native-capable hosts can use React Native WebGPU, with
+a browser WebGL2 fallback. See [3D scenes](sdk/scene3d.md) for the API, model
+limits and the playable `examples/models3d` workshop.
+
+## Default runtime budgets
+
+Every game uses the expanded defaults from `@gaute/games-sdk/limits`; no manifest
+profile is needed. State may use 512 KB and each private view 256 KB. The rules
+bundle may use 384 KB and the client 768 KB, with a 960 KB combined code limit
+to leave room for metadata in the host database. QuickJS has 32 MB memory, a
+512 KB stack and 800 interrupt checks per call. Payloads remain 16 KB, results
+4 KB and actions 10 per player per second.
+
+Existing games keep their contract and protocol. Bigger budgets support larger
+boards and asset sets, but measured execution and rendering costs still matter.
+They do not add realtime prediction, long-lived matches, arbitrary networking
+or native APIs. Creator checks and the Gaute host enforce the defaults.

@@ -1,7 +1,7 @@
 import type { Mode } from '../sdk/logic.ts';
 
 export const ROOT: string;
-export const LIMITS: { logic: number; client: number; maxPlayers: number };
+export const LIMITS: { logic: number; client: number; code: number; maxPlayers: number };
 export const MODES: Mode[];
 export type Manifest = {
   slug: string;

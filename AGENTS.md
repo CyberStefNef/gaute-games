@@ -69,9 +69,9 @@ export const game = defineGame({
 - Modes: in `phones` each player acts on their own phone. In `pass`, `turn` says who
   holds the phone; actions arrive with that `playerId`, or `null` when `turn` is
   `null`. In `shared`, every action has `playerId: null`. Read `mode` in `setup`.
-- Limits: logic bundle 256 KB, state 256 KB, each view 64 KB, payload 16 KB,
-  10 actions per player per second, and a CPU/memory budget per action
-  (an infinite loop or memory bomb fails the game).
+- Default budgets are exported by `@gaute/games-sdk/limits`. Check state, views,
+  code and assets against those budgets before declaring a game ready. Actions
+  remain limited to 10 per player per second. Runaway logic fails the game.
 
 ## Screen (`client.tsx`)
 
@@ -132,8 +132,8 @@ mountGame(Game);
   (Norwegian Bokmål).
 - Other frameworks: `connect<typeof game>(({ snapshot, locale, theme }) => render(snapshot))`
   from `@gaute/games-sdk/client` returns the same typed `{ act, haptic }`.
-- The screen's bundle (script and style) must stay under 512 KB; React and
-  Tailwind take about 230 KB of that.
+- Keep script and style within `GAME_LIMITS.clientBytes` and all code within
+  `GAME_LIMITS.codeBytes`. React and Tailwind take about 230 KB before game assets.
 
 ## Check your work
 
