@@ -4,10 +4,20 @@
   "description": "Make multiplayer games that Gaute groups play together, and the official Gaute games",
   "license": "MIT",
   "repository": "github:CyberStefNef/gaute-games",
+  "bin": {
+    "gaute-game": "tools/cli.mjs"
+  },
   "files": [
     "sdk",
+    "tools",
+    "template",
+    "simulator",
+    "index.html",
     "LICENSE",
-    "README.md"
+    "README.md",
+    ".node-version",
+    "AGENTS.md",
+    "CONTRIBUTING.md"
   ],
   "type": "module",
   "sideEffects": [

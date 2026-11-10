@@ -6,7 +6,8 @@ React, Tailwind CSS and npm. Do not add dependencies a game does not strictly ne
 
 ## Files
 
-A game is a folder `games/<slug>/` (lowercase letters, digits and dashes):
+A standalone game lives at the root of its own repository. Official games live
+in `official/<slug>/` here. The slug uses lowercase letters, digits and dashes:
 
 - `manifest.json`: `slug` (folder name), `name` (≤40), `description` (one short line; ≤200), `players` `{ "min": 2+, "max": ≤16 }`,
   `modes` (one or more of `phones`, `pass`, `shared`) and optional `translations`
@@ -20,7 +21,11 @@ A game is a folder `games/<slug>/` (lowercase letters, digits and dashes):
   `connect` from `@gaute/games-sdk/client`).
 - `style.css`: `@import 'tailwindcss'; @import '@gaute/games-sdk/tailwind.css';`
 
-Start from `npm run new -- <slug>`; `template/` is a complete, working example.
+For a standalone project, use `gaute-game new <slug>` from the SDK package.
+For an official game in this repository, use `npm run new -- <slug>`. Both copy
+the complete `template/` example. Before registering or updating a game, read
+[CONTRIBUTING.md](CONTRIBUTING.md) for the pinned repository index format and
+review requirements. Submit only the index entry here for a community game.
 
 ## Rules (`logic.ts`)
 
@@ -131,6 +136,15 @@ mountGame(Game);
   Tailwind take about 230 KB of that.
 
 ## Check your work
+
+In a standalone project, run `npm run check` and `npm run build`. Commit its
+source, lockfile and MIT licence before submitting the full commit hash to the
+index. Generated bundles stay in ignored `dist/`; do not commit them. Central
+CI builds pinned sources with its own tooling. Community source can import
+relative files, the Gaute SDK, React, React DOM and standard Tailwind. It cannot
+install extra dependencies or run custom build plugins/configuration. Do not use branch names or tags.
+
+For official games and SDK changes in this repository:
 
 ```sh
 vp dev     # simulator: several phones side by side, pass gate, shared screen, log

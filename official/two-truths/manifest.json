@@ -1,0 +1,26 @@
+{
+  "slug": "two-truths",
+  "name": "Two Truths and a Lie",
+  "description": "Spot the lie among three stories.",
+  "players": {
+    "min": 3,
+    "max": 12
+  },
+  "modes": ["phones"],
+  "howToPlay": [
+    "Everyone writes two true things about themselves and one lie at the same time.",
+    "Take turns presenting. Everyone else guesses which statement is the lie.",
+    "A right guess scores for the guesser; every wrong guess scores for the storyteller."
+  ],
+  "translations": {
+    "nb": {
+      "name": "To sannheter og en løgn",
+      "description": "Finn løgnen blant tre historier.",
+      "howToPlay": [
+        "Alle skriver to sanne ting om seg selv og én løgn samtidig.",
+        "Presenter etter tur. De andre gjetter hvilken påstand som er løgnen.",
+        "Riktig gjetning gir poeng til den som gjetter; hver feil gir poeng til den som forteller."
+      ]
+    }
+  }
+}

@@ -1,0 +1,198 @@
+type Kind = 'prompt' | 'duel' | 'vote' | 'rule' | 'hotseat' | 'round';
+export type Card = { kind: Kind; en: string; nb: string; endEn?: string; endNb?: string };
+
+export const CARDS: Card[] = [
+  {
+    kind: 'prompt',
+    en: '{p1}, tell the story behind your most-used emoji.',
+    nb: '{p1}, fortell historien bak emojien du bruker mest.',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, describe your perfect Friday in three words.',
+    nb: '{p1}, beskriv den perfekte fredagen din med tre ord.',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, what is the best concert you have ever been to?',
+    nb: '{p1}, hva er den beste konserten du har vært på?',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, give {p2} an honest compliment.',
+    nb: '{p1}, gi {p2} et ærlig kompliment.',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, which song plays when you walk into a room?',
+    nb: '{p1}, hvilken sang spilles når du kommer inn i et rom?',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, share a skill nobody here knows you have.',
+    nb: '{p1}, del en ferdighet ingen her vet at du har.',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, what is the strangest job you have ever had?',
+    nb: '{p1}, hva er den rareste jobben du har hatt?',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, pitch the next stop to the group in 20 seconds.',
+    nb: '{p1}, selg inn neste stopp til gruppa på 20 sekunder.',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1} and {p2}, find three things you have in common. Go!',
+    nb: '{p1} og {p2}, finn tre ting dere har felles. Kjør!',
+  },
+  {
+    kind: 'prompt',
+    en: '{p1}, tell us about the last time you laughed until you cried.',
+    nb: '{p1}, fortell om sist du lo så du gråt.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: rock, paper, scissors. Best of three.',
+    nb: '{p1} mot {p2}: stein, saks, papir. Best av tre.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: take turns naming capital cities. First to hesitate loses.',
+    nb: '{p1} mot {p2}: nevn hovedsteder annenhver gang. Den som nøler først, taper.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: staring contest. First to laugh loses.',
+    nb: '{p1} mot {p2}: stirrekonkurranse. Den som ler først, taper.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} and {p2} each hum a song. The one the group guesses fastest wins.',
+    nb: '{p1} og {p2} nynner hver sin sang. Den gruppa gjetter raskest, vinner.',
+  },
+  { kind: 'duel', en: '{p1} vs {p2}: thumb war!', nb: '{p1} mot {p2}: tommelkrig!' },
+  {
+    kind: 'vote',
+    en: 'Who is most likely to become famous?',
+    nb: 'Hvem blir mest sannsynlig kjent?',
+  },
+  {
+    kind: 'vote',
+    en: 'Who is most likely to get lost on the way home?',
+    nb: 'Hvem går seg mest sannsynlig vill på vei hjem?',
+  },
+  {
+    kind: 'vote',
+    en: 'Who would survive longest on a desert island?',
+    nb: 'Hvem ville overlevd lengst på en øde øy?',
+  },
+  {
+    kind: 'vote',
+    en: 'Who is most likely to start dancing first tonight?',
+    nb: 'Hvem begynner mest sannsynlig å danse først i kveld?',
+  },
+  { kind: 'vote', en: 'Who gives the best advice?', nb: 'Hvem gir de beste rådene?' },
+  {
+    kind: 'vote',
+    en: 'Who is most likely to befriend a stranger tonight?',
+    nb: 'Hvem blir mest sannsynlig venn med en fremmed i kveld?',
+  },
+  { kind: 'vote', en: 'Who has the best taste in music?', nb: 'Hvem har best musikksmak?' },
+  {
+    kind: 'rule',
+    en: '{p1} may only answer questions with a question.',
+    nb: '{p1} kan bare svare på spørsmål med et spørsmål.',
+    endEn: '{p1} can answer normally again.',
+    endNb: '{p1} kan svare som vanlig igjen.',
+  },
+  {
+    kind: 'rule',
+    en: 'Nobody may say “yes” or “no”.',
+    nb: 'Ingen får si «ja» eller «nei».',
+    endEn: 'You can say “yes” and “no” again.',
+    endNb: 'Dere kan si «ja» og «nei» igjen.',
+  },
+  {
+    kind: 'rule',
+    en: '{p1} must speak in an accent of their choice.',
+    nb: '{p1} må snakke med en valgfri aksent.',
+    endEn: '{p1} can drop the accent.',
+    endNb: '{p1} kan droppe aksenten.',
+  },
+  {
+    kind: 'rule',
+    en: '{p1} and {p2} must high-five every time someone laughs.',
+    nb: '{p1} og {p2} må gi hverandre high five hver gang noen ler.',
+    endEn: '{p1} and {p2} can rest their hands.',
+    endNb: '{p1} og {p2} kan hvile hendene.',
+  },
+  {
+    kind: 'rule',
+    en: 'Everyone must call {p1} “Captain”.',
+    nb: 'Alle må kalle {p1} «Kaptein».',
+    endEn: '{p1} is no longer the Captain.',
+    endNb: '{p1} er ikke lenger kaptein.',
+  },
+  {
+    kind: 'hotseat',
+    en: '{p1} is in the hot seat: everyone asks one question, and {p1} must answer honestly.',
+    nb: '{p1} sitter i den varme stolen: alle stiller ett spørsmål, og {p1} må svare ærlig.',
+  },
+  {
+    kind: 'hotseat',
+    en: '{p1} in the hot seat: the group has one minute to make {p1} laugh.',
+    nb: '{p1} i den varme stolen: gruppa har ett minutt på å få {p1} til å le.',
+  },
+  {
+    kind: 'hotseat',
+    en: 'Everyone says the first word they think of about {p1}. {p1} picks the best one.',
+    nb: 'Alle sier det første ordet de tenker på om {p1}. {p1} velger det beste.',
+  },
+  {
+    kind: 'hotseat',
+    en: 'The group guesses {p1}’s most-used emoji. {p1} reveals it.',
+    nb: 'Gruppa gjetter emojien {p1} bruker mest. {p1} avslører den.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a pizza topping. Repeat one or hesitate and you’re out.',
+    nb: 'Rundt bordet, {p1} begynner: nevn et pizzafyll. Gjentar du eller nøler, er du ute.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a song with a colour in the title.',
+    nb: 'Rundt bordet, {p1} begynner: nevn en sang med en farge i tittelen.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: one word each to build a story. Keep going until someone laughs.',
+    nb: 'Rundt bordet, {p1} begynner: ett ord hver til en historie. Fortsett til noen ler.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a famous duo. The first to get stuck tells an embarrassing story.',
+    nb: 'Rundt bordet, {p1} begynner: nevn en kjent duo. Den første som står fast, forteller en flau historie.',
+  },
+  {
+    kind: 'round',
+    en: 'Round the table, starting with {p1}: name a Norwegian town. No repeats, no hesitating.',
+    nb: 'Rundt bordet, {p1} begynner: nevn et norsk tettsted. Ingen gjentakelser, ingen nøling.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: rock, paper, scissors, best of three. The loser gives the winner a compliment.',
+    nb: '{p1} mot {p2}: stein, saks, papir, best av tre. Taperen gir vinneren et kompliment.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: say “red lorry, yellow lorry” five times fast. Fewest slips wins.',
+    nb: '{p1} mot {p2}: si «Fisker’n Fritz fisket fersk fisk» fem ganger fort. Færrest feil vinner.',
+  },
+  {
+    kind: 'duel',
+    en: '{p1} vs {p2}: stare at each other. First to blink or laugh loses.',
+    nb: '{p1} mot {p2}: se hverandre i øynene. Den første som blunker eller ler, taper.',
+  },
+];

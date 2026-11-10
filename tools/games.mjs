@@ -1,20 +1,21 @@
-// Finds, validates and bundles the games in games/. Used by the Vite plugin
+// Finds, validates and bundles the games in official/. Used by the Vite plugin
 // (simulator and catalogue), the tests and the CI publish step.
 import { createHash } from 'node:crypto';
+import { sourceImports, validateSourceStyles } from './source-build.mjs';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import { build } from 'vite-plus';
-import { iconProblem } from '../sdk/icon.ts';
+import { iconProblem } from '../sdk/icon.mjs';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const LIMITS = { logic: 256 * 1024, client: 512 * 1024, maxPlayers: 16 };
 export const MODES = ['phones', 'pass', 'shared'];
 
-/** Game folders: everything in games/ except helpers such as games/_kit. */
+/** Game folders: everything in official/ except helpers such as official/_kit. */
 export function listGames() {
-  const dir = path.join(ROOT, 'games');
+  const dir = path.join(ROOT, 'official');
   return readdirSync(dir)
     .filter((name) => !name.startsWith('_') && !name.startsWith('.'))
     .filter((name) => statSync(path.join(dir, name)).isDirectory())
@@ -24,10 +25,17 @@ export function listGames() {
 const text = (value, max) =>
   typeof value === 'string' && value.trim() === value && value.length > 0 && value.length <= max;
 
-/** Reads games/<slug>/manifest.json and throws a precise message when it is invalid. */
-export function readManifest(slug, dir = path.join(ROOT, 'games', slug)) {
+/** Reads official/<slug>/manifest.json and throws a precise message when it is invalid. */
+export function readManifest(slug, dir = path.join(ROOT, 'official', slug)) {
   const file = path.join(dir, 'manifest.json');
   const value = JSON.parse(readFileSync(file, 'utf8'));
+  const icon = readFileSync(path.join(dir, 'icon.svg'), 'utf8').trim();
+  return validateManifest(slug, value, icon);
+}
+
+export function validateManifest(slug, value, icon) {
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    throw Error(`${slug}: invalid manifest`);
   const problems = [];
   if (!/^[a-z][a-z0-9-]{1,39}$/.test(slug)) problems.push('folder name must be a lowercase slug');
   if (value.slug !== slug) problems.push(`"slug" must be "${slug}"`);
@@ -68,15 +76,9 @@ export function readManifest(slug, dir = path.join(ROOT, 'games', slug)) {
       problems.push(
         `translation "${locale}" needs a name (≤40), description (≤200) and the same number of howToPlay steps`,
       );
-  let icon = '';
-  try {
-    icon = readFileSync(path.join(dir, 'icon.svg'), 'utf8').trim();
-  } catch {
-    problems.push('add icon.svg');
-  }
-  const unsafe = icon ? iconProblem(icon) : null;
+  const unsafe = typeof icon === 'string' && icon ? iconProblem(icon) : 'add icon.svg';
   if (unsafe) problems.push(`icon.svg ${unsafe}`);
-  if (problems.length) throw Error(`games/${slug}: ${problems.join('; ')}`);
+  if (problems.length) throw Error(`official/${slug}: ${problems.join('; ')}`);
   return {
     slug,
     name: value.name,
@@ -96,15 +98,19 @@ function entry(dir, names) {
   return name;
 }
 
-async function bundle(dir, entry, { page = false } = {}) {
+async function bundle(dir, entry, { page = false, sourceRoot } = {}) {
   const result = await build({
     // Rooted in the game's folder, so Tailwind generates only the classes it uses.
     root: page ? dir : ROOT,
     configFile: false,
     logLevel: 'silent',
     // Game pages may use Tailwind CSS (`@import 'tailwindcss'`) and React.
-    plugins: page ? [tailwindcss()] : [],
+    plugins: [...(sourceRoot ? [sourceImports(sourceRoot)] : []), ...(page ? [tailwindcss()] : [])],
+    css: { postcss: { plugins: [] } },
     define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+    // Nested builds in the live simulator inherit NODE_ENV=development. Match
+    // the JSX transform to the production React runtime bundled above.
+    oxc: { jsx: { development: false } },
     build: {
       write: false,
       minify: true,
@@ -114,6 +120,7 @@ async function bundle(dir, entry, { page = false } = {}) {
         entry: path.join(dir, entry),
         formats: ['iife'],
         name: '__gauteGame',
+        cssFileName: 'game',
         fileName: () => 'game.js',
       },
     },
@@ -132,24 +139,60 @@ async function bundle(dir, entry, { page = false } = {}) {
  * Builds one game: logic for the sandbox, client page script and style, and the
  * content hash that identifies this version.
  */
-export async function bundleGame(slug, folder = path.join(ROOT, 'games', slug)) {
+async function buildGame(slug, folder = path.join(ROOT, 'official', slug), { sourceRoot } = {}) {
   const dir = path.resolve(folder);
+  if (sourceRoot) validateSourceStyles(sourceRoot);
   const manifest = readManifest(slug, dir);
-  const logic = (await bundle(dir, entry(dir, ['logic.ts']))).script;
-  const client = await bundle(dir, entry(dir, ['client.tsx', 'client.ts']), { page: true });
+  const [rules, client] = await Promise.all([
+    bundle(dir, entry(dir, ['logic.ts']), { sourceRoot }),
+    bundle(dir, entry(dir, ['client.tsx', 'client.ts']), { page: true, sourceRoot }),
+  ]);
+  const logic = rules.script;
   if (Buffer.byteLength(logic) > LIMITS.logic)
-    throw Error(`games/${slug}: logic is larger than ${LIMITS.logic / 1024} KB`);
+    throw Error(`official/${slug}: logic is larger than ${LIMITS.logic / 1024} KB`);
   if (Buffer.byteLength(client.script + client.style) > LIMITS.client)
-    throw Error(`games/${slug}: client is larger than ${LIMITS.client / 1024} KB`);
+    throw Error(`official/${slug}: client is larger than ${LIMITS.client / 1024} KB`);
   const hash = createHash('sha256')
     .update([logic, client.script, client.style].join('\0'))
     .digest('hex');
   return { ...manifest, hash, logic, client };
 }
 
+const building = new Map();
+export function bundleGame(slug, folder = path.join(ROOT, 'official', slug), options = {}) {
+  const key = JSON.stringify([slug, path.resolve(folder), options.sourceRoot]);
+  if (!building.has(key))
+    building.set(
+      key,
+      buildGame(slug, folder, options).finally(() => building.delete(key)),
+    );
+  return building.get(key);
+}
+
 /** The catalogue Gaute imports: every game, deterministic for the same sources. */
-export async function buildCatalogue({ commit = 'local' } = {}) {
+export async function buildCatalogue({
+  commit = 'local',
+  localGames = listGames().map((slug) => ({ slug, folder: path.join(ROOT, 'official', slug) })),
+  indexDir = path.join(ROOT, 'index'),
+} = {}) {
+  const { loadIndex, loadIndexedGame } = await import('./registry.mjs');
+  const indexed = indexDir === null ? [] : loadIndex(indexDir);
+  const sources = [...localGames, ...indexed];
+  if (new Set(sources.map((game) => game.slug)).size !== sources.length)
+    throw Error('Duplicate game slug in local games and index');
   const games = [];
-  for (const slug of listGames()) games.push(await bundleGame(slug));
+  // Bounded concurrency keeps a large index from starting hundreds of builds or fetches.
+  for (let i = 0; i < sources.length; i += 3)
+    games.push(
+      ...(await Promise.all(
+        sources
+          .slice(i, i + 3)
+          .map((source) =>
+            'folder' in source
+              ? bundleGame(source.slug, source.folder)
+              : loadIndexedGame(source.slug, source.entry),
+          ),
+      )),
+    );
   return JSON.stringify({ format: 1, commit, games }, null, 2) + '\n';
 }

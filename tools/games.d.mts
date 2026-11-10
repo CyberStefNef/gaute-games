@@ -22,5 +22,14 @@ export type BundledGame = Manifest & {
 };
 export function listGames(): string[];
 export function readManifest(slug: string, dir?: string): Manifest;
-export function bundleGame(slug: string, dir?: string): Promise<BundledGame>;
-export function buildCatalogue(options?: { commit?: string }): Promise<string>;
+export function bundleGame(
+  slug: string,
+  dir?: string,
+  options?: { sourceRoot?: string },
+): Promise<BundledGame>;
+export function buildCatalogue(options?: {
+  commit?: string;
+  localGames?: { slug: string; folder: string }[];
+  indexDir?: string | null;
+}): Promise<string>;
+export function validateManifest(slug: string, value: unknown, icon: string): Manifest;

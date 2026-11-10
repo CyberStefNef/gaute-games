@@ -2,7 +2,7 @@
 // lines stops being an error, or any unmarked line becomes one.
 import { expect, expectTypeOf, test } from 'vite-plus/test';
 import type { ActionName, PayloadOf, ViewOf } from '../sdk/logic.ts';
-import type { game as imposter } from '../games/imposter/logic.ts';
+import type { game as imposter } from '../official/imposter/logic.ts';
 import type { game as template } from '../template/logic.ts';
 import { gameClient, useStrings } from '../sdk/react.tsx';
 

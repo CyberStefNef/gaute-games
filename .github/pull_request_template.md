@@ -1,10 +1,13 @@
-## Game
+## Game or index update
 
-<!-- What is it, how many players, which modes (own phones, pass the phone, one phone)? -->
+<!-- Game, player count and supported modes. For an index entry, link the source
+repository and full pinned commit so the maintainer can review the exact release. -->
 
 ## Checklist
 
-- [ ] `vp check` and `vp test` pass locally.
-- [ ] I played it in the simulator (`vp dev`) in every mode it declares.
-- [ ] Content follows [CONTRIBUTING.md](../CONTRIBUTING.md): nothing hateful, sexual, or encouraging excessive drinking.
-- [ ] I wrote this game or have the right to share it, and I license it under the repository's MIT licence.
+- [ ] For a community game, this changes `index/<slug>.json` with my public repository URL and full commit hash.
+- [ ] That commit includes source, lockfile and MIT licence; generated bundles are not committed.
+- [ ] I ran the creator checks and played this source version in every supported mode.
+- [ ] Content follows [CONTRIBUTING.md](../CONTRIBUTING.md).
+- [ ] I wrote this game or have the right to distribute it under MIT.
+- [ ] For SDK or official-game changes, `npm run check`, `npm test` and `npm run build` pass.
