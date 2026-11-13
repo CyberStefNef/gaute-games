@@ -8,14 +8,16 @@ import '../_kit/style.css';
 const { mountGame, useGame } = gameClient<typeof game>();
 
 function Game() {
-  const { view, players, name, act, playing, busy } = useGame();
+  const { view, players, name, act, playing, busy, pending } = useGame();
   const t = useStrings(strings);
   const [double, setDouble] = useState(false);
   useEffect(() => setDouble(false), [view.number]);
   const phones = view.mode === 'phones';
   const present = players.filter((player) => !player.left).length;
   const last = view.number === view.total;
-  const answered = view.yourAnswer !== null;
+  const answered =
+    view.yourAnswer !== null ||
+    (pending?.action === 'answer' && pending.view.number === view.number);
   const gains = Object.entries(view.gains).sort((a, b) => b[1].points - a[1].points);
   return (
     <Page
@@ -58,7 +60,10 @@ function Game() {
           {view.options.map((text, index) => {
             const right = view.correct === index;
             const wrong = view.revealed && view.yourAnswer === index && !right;
-            const picked = view.yourAnswer === index;
+            const picked =
+              (pending?.action === 'answer' && pending.view.number === view.number
+                ? pending.payload.value
+                : view.yourAnswer) === index;
             const who = Object.entries(view.picks)
               .filter(([, pick]) => pick === index)
               .map(([player]) => name(player));
@@ -67,6 +72,8 @@ function Game() {
                 key={index}
                 type="button"
                 disabled={view.revealed || answered || busy || !playing}
+                aria-pressed={picked}
+                aria-busy={(picked && busy) || undefined}
                 onClick={() => act('answer', { value: index, double })}
                 className={`flex min-h-14 flex-col justify-center rounded-xl border-2 px-4 py-2 text-left font-semibold ${
                   right
@@ -89,6 +96,7 @@ function Game() {
         {!view.revealed && !answered ? (
           <button
             type="button"
+            disabled={busy || answered || !playing}
             aria-pressed={double}
             onClick={() => setDouble(!double)}
             className={`w-full rounded-xl border-2 px-4 py-2.5 text-left ${

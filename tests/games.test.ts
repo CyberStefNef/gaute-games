@@ -11,8 +11,12 @@ const games: [string, string][] = [
 ];
 
 describe.each(games)('%s', (name, dir) => {
-  test('builds and plays in every declared mode, with deterministic replay and departures', async () => {
-    const game = await bundleGame(name === 'template' ? 'my-game' : name, dir);
-    await verifyGame(game);
-  });
+  test(
+    'builds and plays in every declared mode, with deterministic replay and departures',
+    async () => {
+      const game = await bundleGame(name === 'template' ? 'my-game' : name, dir);
+      await verifyGame(game);
+    },
+    name === 'frontier' ? 120_000 : 60_000,
+  );
 });

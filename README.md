@@ -21,7 +21,10 @@ and what each player may see; Gaute runs them in a sandbox. **The screen**
 (`client.tsx`) is an ordinary web page. The template uses React and Tailwind CSS,
 whose `bg-primary`, `text-muted-foreground` and other colours follow the app's
 theme in light and dark mode. Plain DOM and canvas work too. Central source
-builds use the approved SDK, React and Tailwind imports. Gaute shows it inside the app with the app's fonts and no network access.
+builds use the approved SDK, React and Tailwind imports. Gaute gives it the full screen with the app's fonts and no network access.
+Games own their navigation: `useGame()` exposes `controls` and `host(action)`
+for Back, leaving/ending a session, replay and changing local players. Render only
+the advertised controls; the app validates requests and keeps group End host-only.
 
 ## Make a game
 
@@ -160,3 +163,19 @@ Existing games keep their contract and protocol. Bigger budgets support larger
 boards and asset sets, but measured execution and rendering costs still matter.
 They do not add realtime prediction, long-lived matches, arbitrary networking
 or native APIs. Creator checks and the Gaute host enforce the defaults.
+
+## Responsive game pages
+
+Render the SDK's optional `<PauseMenu />` inside your game, or use `controls`,
+`host(action)` and `useGameBack` for your own navigation. The template includes the
+menu and it follows the app's language and theme. Import the SDK Tailwind sheet
+so installed-package menu styles are included.
+
+`useGame().pending` is typed from your rules, just like `act`. Use its action and
+payload to highlight the player's selection immediately while `busy` is true.
+Use `pending.view` to scope a preview to the original question/round.
+The server decides scores and outcomes; clear/reconcile any local preview when
+an action fails or the confirmed view arrives. The SDK waits for the committed
+snapshot version even if the acknowledgement arrives first, bounds missing
+responses, and never automatically repeats an action. Plain `connect` supports
+`onBack` and `dispose` as well as the same ordered acknowledgements.

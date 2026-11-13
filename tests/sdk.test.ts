@@ -178,3 +178,177 @@ test('expanded budgets still reject excess state and views and interrupt runaway
     runGame(`__gaute.defineGame({setup:()=>{for(;;){}},actions:{},view:()=>null});`, setup),
   ).rejects.toThrow(/interrupted/);
 });
+
+test('host controls are bounded and never accepted as arbitrary navigation', () => {
+  for (const action of ['back', 'leave', 'end', 'replay', 'players']) {
+    expect(
+      parseGameMessage(JSON.stringify({ gaute: PROTOCOL, type: 'host-action', id: 1, action })),
+    ).toEqual({ gaute: PROTOCOL, type: 'host-action', id: 1, action });
+  }
+  for (const action of ['https://evil.example', '/settings', 'delete', null]) {
+    expect(parseGameMessage({ gaute: PROTOCOL, type: 'host-action', id: 1, action })).toBeNull();
+  }
+  expect(
+    parseGameMessage({ gaute: PROTOCOL, type: 'host-action', id: 1.5, action: 'back' }),
+  ).toBeNull();
+  expect(
+    parseHostMessage({ gaute: PROTOCOL, type: 'update', snapshot: {}, controls: ['delete'] }),
+  ).toBeNull();
+  expect(
+    parseHostMessage({ gaute: PROTOCOL, type: 'update', snapshot: {}, controls: ['back'] })?.type,
+  ).toBe('update');
+});
+
+test('the client routes advertised host controls separately from rules and follows permission updates', async () => {
+  const { connect } = await import('../sdk/client');
+  const sent: unknown[] = [];
+  const parent = { postMessage: (message: unknown) => sent.push(message) };
+  let receive!: (event: { source: unknown; data: unknown }) => void;
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, {
+    window: {
+      parent,
+      addEventListener: (_: string, handler: typeof receive) => {
+        receive = handler;
+      },
+    },
+    document: { documentElement: { style: { setProperty() {} }, classList: { toggle() {} } } },
+  });
+  try {
+    const client = connect(() => {});
+    const snapshot = {
+      mode: 'shared',
+      status: 'playing',
+      version: 1,
+      you: null,
+      players: [],
+      view: null,
+    };
+    receive({
+      source: parent,
+      data: { gaute: PROTOCOL, type: 'init', locale: 'en', theme, snapshot, controls: ['back'] },
+    });
+    const count = sent.length;
+    expect((await client.host('end')).ok).toBe(false);
+    expect(sent.length).toBe(count);
+    const pending = client.host('back');
+    const message = sent.at(-1) as { id: number };
+    expect(message).toMatchObject({ type: 'host-action', action: 'back' });
+    receive({ source: {}, data: { gaute: PROTOCOL, type: 'result', id: message.id, ok: true } });
+    receive({
+      source: parent,
+      data: { gaute: PROTOCOL, type: 'result', id: message.id, ok: true },
+    });
+    expect(await pending).toEqual({ ok: true });
+    receive({ source: parent, data: { gaute: PROTOCOL, type: 'update', snapshot, controls: [] } });
+    expect((await client.host('back')).ok).toBe(false);
+  } finally {
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument });
+  }
+});
+
+function bridge() {
+  const originalWindow = globalThis.window,
+    originalDocument = globalThis.document;
+  const sent: any[] = [];
+  let receive!: (event: any) => void;
+  let writes = 0;
+  const parent = { postMessage: (message: unknown) => sent.push(message) };
+  Object.assign(globalThis, {
+    window: {
+      parent,
+      addEventListener: (_: string, handler: typeof receive) => {
+        receive = handler;
+      },
+      removeEventListener() {},
+    },
+    document: {
+      documentElement: {
+        style: {
+          setProperty() {
+            writes++;
+          },
+        },
+        classList: { toggle() {} },
+      },
+    },
+  });
+  const send = (data: any) => receive({ source: parent, data: { gaute: PROTOCOL, ...data } });
+  const snapshot = (version: number) => ({
+    mode: 'phones',
+    status: 'playing',
+    version,
+    you: 'p1',
+    players: [],
+    view: null,
+  });
+  return {
+    sent,
+    send,
+    snapshot,
+    writes: () => writes,
+    restore: () =>
+      Object.assign(globalThis, { window: originalWindow, document: originalDocument }),
+  };
+}
+
+test('an action waits for its committed view in either message order without rewriting theme tokens', async () => {
+  const { connect } = await import('../sdk/client');
+  for (const stateFirst of [true, false]) {
+    const h = bridge();
+    const client = connect(() => {});
+    try {
+      h.send({
+        type: 'init',
+        locale: 'en',
+        theme: { ...theme, colors: { background: '#fff' } },
+        snapshot: h.snapshot(1),
+      });
+      const writes = h.writes();
+      let settled = false;
+      const promise = client.act('vote', null).then((result) => {
+        settled = true;
+        return result;
+      });
+      const { id } = h.sent.at(-1);
+      if (stateFirst) h.send({ type: 'update', snapshot: h.snapshot(3) });
+      h.send({ type: 'result', id, ok: true, version: 3 });
+      await Promise.resolve();
+      expect(settled).toBe(stateFirst);
+      if (!stateFirst) {
+        h.send({ type: 'update', snapshot: h.snapshot(2) });
+        await Promise.resolve();
+        expect(settled).toBe(false);
+        h.send({ type: 'update', snapshot: h.snapshot(3) });
+      }
+      expect(await promise).toEqual({ ok: true, version: 3 });
+      expect(h.writes()).toBe(writes);
+    } finally {
+      client.dispose();
+      h.restore();
+    }
+  }
+});
+
+test('Back belongs to the game and disposing the bridge settles pending requests', async () => {
+  const { connect } = await import('../sdk/client');
+  const h = bridge();
+  const client = connect(() => {});
+  try {
+    h.send({ type: 'init', locale: 'en', theme, snapshot: h.snapshot(1), controls: ['back'] });
+    let backs = 0;
+    const stop = client.onBack(() => {
+      backs++;
+    });
+    h.send({ type: 'back' });
+    expect(backs).toBe(1);
+    stop();
+    const pending = client.act('vote', null);
+    client.dispose();
+    expect((await pending).ok).toBe(false);
+  } finally {
+    client.dispose();
+    h.restore();
+  }
+});

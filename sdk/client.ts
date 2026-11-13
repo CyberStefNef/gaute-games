@@ -4,6 +4,8 @@
 import type { ActionName, AnyGameRules, Json, PayloadOf, ViewOf } from './logic';
 import {
   PROTOCOL,
+  HOST_ACTIONS,
+  type HostAction,
   parseHostMessage,
   themeVariables,
   type GameMessage,
@@ -14,8 +16,13 @@ import {
 } from './protocol';
 
 export type { GauteReaction, Haptic, Player, Snapshot, Theme } from './protocol';
-export type GameState<View = Json> = { snapshot: Snapshot<View>; locale: string; theme: Theme };
-export type ActResult = { ok: true } | { ok: false; reason: string };
+export type GameState<View = Json> = {
+  snapshot: Snapshot<View>;
+  locale: string;
+  theme: Theme;
+  controls: HostAction[];
+};
+export type ActResult = { ok: true; version?: number } | { ok: false; reason: string };
 /** The arguments after an action's name: its payload, or nothing for an action without one. */
 export type PayloadArgs<Rules, Name extends ActionName<Rules>> = [PayloadOf<Rules, Name>] extends [
   null,
@@ -42,17 +49,77 @@ export function connect<Rules extends AnyGameRules = AnyGameRules>(
 ) {
   let state: GameState<ViewOf<Rules>> | undefined;
   let next = 1;
-  const pending = new Map<number, (result: ActResult) => void>();
-  window.addEventListener('message', (event) => {
+  const pending = new Map<
+    number,
+    {
+      resolve: (result: ActResult) => void;
+      timer: ReturnType<typeof setTimeout>;
+      result?: ActResult;
+    }
+  >();
+  const backHandlers = new Set<() => void>();
+  const finish = (id: number, result: ActResult) => {
+    const request = pending.get(id);
+    if (!request) return;
+    clearTimeout(request.timer);
+    pending.delete(id);
+    request.resolve(result);
+  };
+  const request = (
+    message:
+      | Omit<Extract<GameMessage, { type: 'act' }>, 'id'>
+      | Omit<Extract<GameMessage, { type: 'host-action' }>, 'id'>,
+  ): Promise<ActResult> => {
+    const id = next++;
+    return new Promise((resolve) => {
+      const timer = setTimeout(
+        () =>
+          finish(id, {
+            ok: false,
+            reason:
+              state?.locale === 'nb'
+                ? 'Svaret tok for lang tid. Vent til spillet er oppdatert før du prøver igjen.'
+                : 'The response took too long. Wait for the game to update before trying again.',
+          }),
+        20000,
+      );
+      pending.set(id, { resolve, timer });
+      try {
+        send({ ...message, id });
+      } catch {
+        finish(id, {
+          ok: false,
+          reason: state?.locale === 'nb' ? 'Tilkobling kreves' : 'Connection needed',
+        });
+      }
+    });
+  };
+  const receive = (event: MessageEvent) => {
     // On the web only the embedding app may talk to the game.
     if (!nativeBridge() && event.source !== window.parent) return;
     const message = parseHostMessage(event.data);
     if (!message) return;
+    if (message.type === 'back') {
+      const handler = [...backHandlers].at(-1);
+      if (handler) handler();
+      else if (state?.controls.includes('back'))
+        void request({ gaute: PROTOCOL, type: 'host-action', action: 'back' });
+      return;
+    }
     if (message.type === 'result') {
-      pending.get(message.id)?.(
-        message.ok ? { ok: true } : { ok: false, reason: message.reason ?? '' },
-      );
-      pending.delete(message.id);
+      const result: ActResult = message.ok
+        ? { ok: true, ...(message.version === undefined ? {} : { version: message.version }) }
+        : { ok: false, reason: message.reason ?? '' };
+      // Acknowledgement and reactive state may arrive in either order. Keep the
+      // action pending until the state that committed it has been rendered.
+      if (
+        result.ok &&
+        result.version !== undefined &&
+        (!state || state.snapshot.version < result.version)
+      ) {
+        const entry = pending.get(message.id);
+        if (entry) entry.result = result;
+      } else finish(message.id, result);
       return;
     }
     // The view is what this game's rules returned; the app passes it through as is.
@@ -61,28 +128,63 @@ export function connect<Rules extends AnyGameRules = AnyGameRules>(
         snapshot: message.snapshot as Snapshot<ViewOf<Rules>>,
         locale: message.locale,
         theme: message.theme,
+        controls: (message.controls ?? []).filter((action) => HOST_ACTIONS.includes(action)),
       };
     else if (!state) return;
     else if (message.type === 'update')
-      state = { ...state, snapshot: message.snapshot as Snapshot<ViewOf<Rules>> };
+      state = {
+        ...state,
+        snapshot: message.snapshot as Snapshot<ViewOf<Rules>>,
+        controls: message.controls ?? state.controls,
+      };
     else state = { ...state, theme: message.theme };
-    applyTheme(state.theme);
+    if (message.type === 'init' || message.type === 'theme') applyTheme(state.theme);
     onState(state);
+    for (const [id, entry] of pending) {
+      if (
+        entry.result?.ok &&
+        entry.result.version !== undefined &&
+        state.snapshot.version >= entry.result.version
+      )
+        finish(id, entry.result);
+    }
     // The app keeps the page hidden until it has drawn once, so it never flashes.
     if (message.type === 'init') send({ gaute: PROTOCOL, type: 'shown' });
-  });
-  send({ gaute: PROTOCOL, type: 'ready' });
+  };
+  window.addEventListener('message', receive);
+  send({ gaute: PROTOCOL, type: 'ready', backHandling: true });
   return {
+    /** Registers game-owned Back handling, e.g. closing an open pause menu. */
+    onBack(handler: () => void) {
+      backHandlers.add(handler);
+      return () => {
+        backHandlers.delete(handler);
+      };
+    },
+    /** Releases listeners and settles outstanding requests when embedding without a page reload. */
+    dispose() {
+      window.removeEventListener('message', receive);
+      for (const id of pending.keys()) finish(id, { ok: false, reason: 'Connection needed' });
+      backHandlers.clear();
+    },
+    /** Runs a host control advertised by the app, without invoking game rules. */
+    host(action: HostAction): Promise<ActResult> {
+      if (!state?.controls.includes(action))
+        return Promise.resolve({
+          ok: false,
+          reason:
+            state?.locale === 'nb'
+              ? 'Handlingen er ikke tilgjengelig.'
+              : 'This action is not available.',
+        });
+      return request({ gaute: PROTOCOL, type: 'host-action', action });
+    },
     /** Sends an action to the game's rules. Resolves when it is applied or rejected. */
     act<Name extends ActionName<Rules>>(
       action: Name,
       ...[payload]: PayloadArgs<Rules, Name>
     ): Promise<ActResult> {
-      const id = next++;
-      return new Promise((resolve) => {
-        pending.set(id, resolve);
-        send({ gaute: PROTOCOL, type: 'act', id, action, payload: (payload ?? null) as Json });
-      });
+      return request({ gaute: PROTOCOL, type: 'act', action, payload: (payload ?? null) as Json });
     },
     /** Asks the app for haptic feedback (phones only; ignored on the web). */
     haptic(style: Haptic = 'selection') {

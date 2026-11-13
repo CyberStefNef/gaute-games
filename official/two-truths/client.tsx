@@ -66,7 +66,7 @@ function Write() {
 }
 
 function Game() {
-  const { view, you, name, act, playing, busy } = useGame();
+  const { view, you, name, act, playing, busy, pending } = useGame();
   const t = useStrings(strings);
   const telling = view.teller === you;
   const round = t('Round {n} of {total}', { n: view.round, total: view.rounds });
@@ -118,7 +118,10 @@ function Game() {
         <div className="flex w-full flex-col gap-2">
           {view.statements.map((text, index) => {
             const isLie = view.lie === index;
-            const picked = view.yourGuess === index;
+            const picked =
+              (pending?.action === 'guess' && pending.view.round === view.round
+                ? pending.payload.value
+                : view.yourGuess) === index;
             const by = Object.entries(view.guesses)
               .filter(([, guess]) => guess === index)
               .map(([player]) => name(player));
@@ -127,6 +130,8 @@ function Game() {
                 key={index}
                 type="button"
                 disabled={telling || revealed || busy || !playing}
+                aria-pressed={picked}
+                aria-busy={(picked && busy) || undefined}
                 onClick={() => act('guess', { value: index })}
                 className={`flex flex-col gap-1 rounded-xl border-2 px-4 py-3 text-left ${
                   (revealed || telling) && isLie

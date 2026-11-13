@@ -1,8 +1,8 @@
 // Building blocks shared by the official games, styled with the app's theme
 // through Tailwind. Creators are free to use anything else.
-import { useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { AnyGameRules } from '@gaute/games-sdk/logic';
-import { gameClient } from '@gaute/games-sdk/react';
+import { gameClient, PauseMenu as GameControls } from '@gaute/games-sdk/react';
 
 // These parts work in any game, so they only use what every game has.
 const { useGame } = gameClient<AnyGameRules>();
@@ -27,6 +27,7 @@ export function Page({
   const { rejected } = useGame();
   return (
     <main className="mx-auto flex min-h-screen max-w-[560px] flex-col text-base leading-snug">
+      <GameControls />
       <div className="flex flex-1 flex-col justify-center gap-4 px-5 py-8">{children}</div>
       {below ? <div className="flex flex-col gap-3 px-5 pb-4">{below}</div> : null}
       {actions || rejected ? (
@@ -87,16 +88,26 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { primary?: boolean }) {
   const { busy } = useGame();
+  const [pressed, setPressed] = useState(false);
+  useEffect(() => {
+    if (!busy) setPressed(false);
+  }, [busy, pressed]);
   return (
     <button
       type="button"
-      disabled={busy || props.disabled}
       className={`min-h-12 rounded-xl px-4 font-semibold transition-opacity active:opacity-70 disabled:opacity-50 ${
         primary
           ? 'bg-primary text-primary-foreground'
           : 'border border-border bg-card text-card-foreground'
       } ${className}`}
       {...props}
+      disabled={busy || props.disabled}
+      aria-busy={(busy && pressed) || undefined}
+      onClick={(event) => {
+        setPressed(true);
+        props.onClick?.(event);
+      }}
+      data-pending={(busy && pressed) || undefined}
     />
   );
 }
@@ -111,18 +122,29 @@ export function PlayerChoice({
   chosen: string | null;
   onChoose: (handle: string) => void;
 }) {
-  const { name, playing, busy } = useGame();
+  const { name, playing, busy, pending } = useGame();
+  const payload = pending?.payload;
+  const pendingChoice =
+    payload &&
+    typeof payload === 'object' &&
+    !Array.isArray(payload) &&
+    'target' in payload &&
+    typeof payload.target === 'string'
+      ? payload.target
+      : null;
   return (
     <div className="flex w-full flex-col gap-2">
       {handles.map((handle) => {
-        const selected = chosen === handle;
+        const selected = (busy && pendingChoice !== null ? pendingChoice : chosen) === handle;
         return (
           <button
             key={handle}
             type="button"
             aria-pressed={selected}
             disabled={busy || !playing}
-            onClick={() => onChoose(handle)}
+            onClick={() => {
+              onChoose(handle);
+            }}
             className={`flex min-h-12 items-center justify-between rounded-xl border px-4 text-left font-medium transition-colors disabled:opacity-60 ${
               selected
                 ? 'border-primary bg-primary text-primary-foreground'
@@ -300,3 +322,5 @@ export function PackPicker({
     </Hero>
   );
 }
+
+export { GameControls };

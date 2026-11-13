@@ -49,7 +49,7 @@ function AddOwn() {
 }
 
 function Game() {
-  const { view, players, name, act, playing } = useGame();
+  const { view, players, name, act, playing, pending } = useGame();
   const t = useStrings(strings);
   const phones = view.mode === 'phones';
   if (!view.pack)
@@ -114,13 +114,21 @@ function Game() {
           <>
             <div className="grid w-full grid-cols-2 gap-2">
               <Button
-                primary={view.yourAnswer === true}
+                primary={
+                  pending?.action === 'answer' && pending.view.round === view.round
+                    ? pending.payload.value === 1
+                    : view.yourAnswer === true
+                }
                 onClick={() => act('answer', { value: 1 })}
               >
                 {t('I have')}
               </Button>
               <Button
-                primary={view.yourAnswer === false}
+                primary={
+                  pending?.action === 'answer' && pending.view.round === view.round
+                    ? pending.payload.value === 0
+                    : view.yourAnswer === false
+                }
                 onClick={() => act('answer', { value: 0 })}
               >
                 {t('I haven’t')}

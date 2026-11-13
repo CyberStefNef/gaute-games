@@ -22,7 +22,7 @@ const Fact = ({ text }: { text: string }) => (
 );
 
 function Game() {
-  const { view, you, players, name, act, playing, busy } = useGame();
+  const { view, you, players, name, act, playing, busy, pending } = useGame();
   const t = useStrings(strings);
   const [text, setText] = useState('');
   useEffect(() => setText(''), [view.round]);
@@ -114,13 +114,18 @@ function Game() {
         {!revealed ? <Muted>{t('Which one is true?')}</Muted> : null}
         <div className="flex w-full flex-col gap-2">
           {view.options.map((choice, index) => {
-            const picked = view.yourVote === index;
+            const picked =
+              (pending?.action === 'vote' && pending.view.round === view.round
+                ? pending.payload.value
+                : view.yourVote) === index;
             const names = choice.pickedBy.map(name).join(', ');
             return (
               <button
                 key={index}
                 type="button"
                 disabled={revealed || choice.mine || busy || !playing}
+                aria-pressed={picked}
+                aria-busy={(picked && busy) || undefined}
                 onClick={() => act('vote', { value: index })}
                 className={`flex flex-col gap-0.5 rounded-xl border-2 px-4 py-3 text-left ${
                   choice.revealed && choice.truth

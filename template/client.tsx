@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gameClient, useStrings } from '@gaute/games-sdk/react';
+import { gameClient, useStrings, PauseMenu } from '@gaute/games-sdk/react';
 import type { game } from './logic';
 import './style.css';
 
@@ -49,6 +49,7 @@ function Game() {
 
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-4 p-4">
+      <PauseMenu />
       <h1 className="text-2xl font-bold">{title}</h1>
       {playing && view.yourTurn ? (
         <form

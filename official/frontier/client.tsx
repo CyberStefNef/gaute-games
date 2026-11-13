@@ -2,7 +2,7 @@
 // shows the selection and its options; sheets hold the skill tree, orders,
 // ledger, standings and help. Rules data arrives through ui/wire.ts only.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Hero, Muted, Title } from '../_kit/ui';
+import { Button, GameControls, Hero, Muted, Title } from '../_kit/ui';
 import { Board, type BoardHandle, type BoardMarks } from './ui/board';
 import type { BrewView } from './ui/contract';
 import { groundName, identities } from './ui/derived';
@@ -42,6 +42,7 @@ function Setup() {
   };
   return (
     <main className="mx-auto flex min-h-dvh max-w-[560px] flex-col gap-4 p-5 py-8">
+      <GameControls />
       <Hero>
         <SetupArt />
         <Title large>{t('Gaute Brewtown')}</Title>
@@ -319,6 +320,7 @@ function Town() {
 
   return (
     <main className="fr-root text-foreground">
+      <GameControls />
       <RealmBar
         brew={brew}
         owner={owner}
