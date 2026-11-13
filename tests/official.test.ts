@@ -401,3 +401,29 @@ test('Charades refills an exhausted mixed deck without ending the timed turn', a
   expect(game.current.turn).toBe('p1');
   expect(game.current.ended).toBeUndefined();
 });
+
+test('Beer Golf hides strokes until the hole is revealed and ends with scores against par', async () => {
+  const game = await session('beer-golf', 'phones', ['p1', 'p2']);
+  // Only the host sets up; the round then has three holes.
+  expect((await game.act('p2', 'setStyle', { value: 1 })).ok).toBe(false);
+  expect((await game.act('p1', 'setStyle', { value: 1 })).ok).toBe(true);
+  expect((await game.act('p1', 'setHoles', { value: 0 })).ok).toBe(true);
+  expect((await game.act('p1', 'start')).ok).toBe(true);
+  expect((await game.act('p1', 'setStyle', { value: 0 })).ok).toBe(false);
+  const par = game.view('p1').par;
+  for (let hole = 0; hole < 3; hole++) {
+    const { par } = game.view('p1');
+    expect((await game.act('p1', 'submit', { value: par + 5, target: null })).ok).toBe(false);
+    expect((await game.act('p1', 'submit', { value: par - 1, target: null })).ok).toBe(true);
+    expect(game.view('p2').card.p1).toHaveLength(hole);
+    expect(game.view('p2').revealed).toBe(false);
+    expect((await game.act('p2', 'submit', { value: 0, target: null })).ok).toBe(true);
+    expect(game.view('p1').revealed).toBe(true);
+    expect(game.view('p1').card.p1[hole]).toBe(par - 1);
+    expect(game.view('p1').card.p2[hole]).toBeNull();
+    await game.act('p1', 'next');
+  }
+  expect(par).toBeGreaterThan(0);
+  expect(game.current.ended).toBeDefined();
+  expect(JSON.parse(game.current.ended!).toPar).toEqual({ p1: -3, p2: 0 });
+});
