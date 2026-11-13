@@ -18,6 +18,7 @@ import {
   type PayloadArgs,
   type Player,
 } from './client';
+import type { HostAction } from './protocol';
 import type { ActionName, AnyGameRules, Json, Mode, PlayerHandle, ViewOf } from './logic';
 
 type Store = {
@@ -67,6 +68,8 @@ export type Game<Rules extends AnyGameRules> = {
     action: Name,
     ...payload: PayloadArgs<Rules, Name>
   ) => Promise<ActResult>;
+  controls: HostAction[];
+  host: (action: HostAction) => Promise<ActResult>;
   busy: boolean;
   rejected: string | null;
   /** Native haptic feedback on phones; ignored on the web. */
@@ -127,6 +130,13 @@ function useGame<Rules extends AnyGameRules>(): Game<Rules> {
     rejected,
     haptic,
     gaute,
+    controls: state.controls,
+    host: async (action) => {
+      update({ busy: true, rejected: null });
+      const result = await session!.host(action);
+      update({ busy: false, rejected: result.ok ? null : result.reason });
+      return result;
+    },
   };
 }
 

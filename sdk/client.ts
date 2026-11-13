@@ -4,6 +4,8 @@
 import type { ActionName, AnyGameRules, Json, PayloadOf, ViewOf } from './logic';
 import {
   PROTOCOL,
+  HOST_ACTIONS,
+  type HostAction,
   parseHostMessage,
   themeVariables,
   type GameMessage,
@@ -14,7 +16,12 @@ import {
 } from './protocol';
 
 export type { GauteReaction, Haptic, Player, Snapshot, Theme } from './protocol';
-export type GameState<View = Json> = { snapshot: Snapshot<View>; locale: string; theme: Theme };
+export type GameState<View = Json> = {
+  snapshot: Snapshot<View>;
+  locale: string;
+  theme: Theme;
+  controls: HostAction[];
+};
 export type ActResult = { ok: true } | { ok: false; reason: string };
 /** The arguments after an action's name: its payload, or nothing for an action without one. */
 export type PayloadArgs<Rules, Name extends ActionName<Rules>> = [PayloadOf<Rules, Name>] extends [
@@ -61,10 +68,15 @@ export function connect<Rules extends AnyGameRules = AnyGameRules>(
         snapshot: message.snapshot as Snapshot<ViewOf<Rules>>,
         locale: message.locale,
         theme: message.theme,
+        controls: (message.controls ?? []).filter((action) => HOST_ACTIONS.includes(action)),
       };
     else if (!state) return;
     else if (message.type === 'update')
-      state = { ...state, snapshot: message.snapshot as Snapshot<ViewOf<Rules>> };
+      state = {
+        ...state,
+        snapshot: message.snapshot as Snapshot<ViewOf<Rules>>,
+        controls: message.controls ?? state.controls,
+      };
     else state = { ...state, theme: message.theme };
     applyTheme(state.theme);
     onState(state);
@@ -73,6 +85,16 @@ export function connect<Rules extends AnyGameRules = AnyGameRules>(
   });
   send({ gaute: PROTOCOL, type: 'ready' });
   return {
+    /** Runs a host control advertised by the app, without invoking game rules. */
+    host(action: HostAction): Promise<ActResult> {
+      if (!state?.controls.includes(action))
+        return Promise.resolve({ ok: false, reason: 'Unavailable' });
+      const id = next++;
+      return new Promise((resolve) => {
+        pending.set(id, resolve);
+        send({ gaute: PROTOCOL, type: 'host-action', id, action });
+      });
+    },
     /** Sends an action to the game's rules. Resolves when it is applied or rejected. */
     act<Name extends ActionName<Rules>>(
       action: Name,

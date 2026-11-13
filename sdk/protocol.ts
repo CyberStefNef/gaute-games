@@ -85,13 +85,24 @@ export function themeVariables(theme: Theme): Record<string, string> {
   return variables;
 }
 
+export const HOST_ACTIONS = ['back', 'leave', 'end', 'replay', 'players'] as const;
+export type HostAction = (typeof HOST_ACTIONS)[number];
+
 export type HostMessage =
-  | { gaute: typeof PROTOCOL; type: 'init'; locale: string; theme: Theme; snapshot: Snapshot }
-  | { gaute: typeof PROTOCOL; type: 'update'; snapshot: Snapshot }
+  | {
+      gaute: typeof PROTOCOL;
+      type: 'init';
+      locale: string;
+      theme: Theme;
+      snapshot: Snapshot;
+      controls?: HostAction[];
+    }
+  | { gaute: typeof PROTOCOL; type: 'update'; snapshot: Snapshot; controls?: HostAction[] }
   | { gaute: typeof PROTOCOL; type: 'theme'; theme: Theme }
   | { gaute: typeof PROTOCOL; type: 'result'; id: number; ok: boolean; reason?: string };
 
 export type GameMessage =
+  | { gaute: typeof PROTOCOL; type: 'host-action'; id: number; action: HostAction }
   | { gaute: typeof PROTOCOL; type: 'ready' }
   /** The first state has been drawn; the app reveals the page now. */
   | { gaute: typeof PROTOCOL; type: 'shown' }
@@ -120,6 +131,15 @@ function decode(raw: unknown, limit: number): Record<string, unknown> | null {
 export function parseGameMessage(raw: unknown): GameMessage | null {
   const message = decode(raw, GAME_MESSAGE_LIMIT);
   if (!message) return null;
+  if (message.type === 'host-action')
+    return Number.isSafeInteger(message.id) && HOST_ACTIONS.includes(message.action as HostAction)
+      ? {
+          gaute: PROTOCOL,
+          type: 'host-action',
+          id: message.id as number,
+          action: message.action as HostAction,
+        }
+      : null;
   if (message.type === 'ready') return { gaute: PROTOCOL, type: 'ready' };
   if (message.type === 'shown') return { gaute: PROTOCOL, type: 'shown' };
   if (message.type === 'failed')
@@ -166,11 +186,21 @@ export function parseHostMessage(raw: unknown): HostMessage | null {
   if (!message) return null;
   switch (message.type) {
     case 'init':
-      return typeof message.locale === 'string' && record(message.theme) && record(message.snapshot)
+      return typeof message.locale === 'string' &&
+        record(message.theme) &&
+        record(message.snapshot) &&
+        (message.controls === undefined ||
+          (Array.isArray(message.controls) &&
+            message.controls.every((action) => HOST_ACTIONS.includes(action as HostAction))))
         ? (message as HostMessage)
         : null;
     case 'update':
-      return record(message.snapshot) ? (message as HostMessage) : null;
+      return record(message.snapshot) &&
+        (message.controls === undefined ||
+          (Array.isArray(message.controls) &&
+            message.controls.every((action) => HOST_ACTIONS.includes(action as HostAction))))
+        ? (message as HostMessage)
+        : null;
     case 'theme':
       return record(message.theme) ? (message as HostMessage) : null;
     case 'result':

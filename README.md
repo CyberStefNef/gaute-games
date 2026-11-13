@@ -21,7 +21,10 @@ and what each player may see; Gaute runs them in a sandbox. **The screen**
 (`client.tsx`) is an ordinary web page. The template uses React and Tailwind CSS,
 whose `bg-primary`, `text-muted-foreground` and other colours follow the app's
 theme in light and dark mode. Plain DOM and canvas work too. Central source
-builds use the approved SDK, React and Tailwind imports. Gaute shows it inside the app with the app's fonts and no network access.
+builds use the approved SDK, React and Tailwind imports. Gaute gives it the full screen with the app's fonts and no network access.
+Games own their navigation: `useGame()` exposes `controls` and `host(action)`
+for Back, leaving/ending a session, replay and changing local players. Render only
+the advertised controls; the app validates requests and keeps group End host-only.
 
 ## Make a game
 

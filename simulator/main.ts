@@ -284,13 +284,19 @@ window.addEventListener('message', (event) => {
       locale: ui.locale.value,
       theme: theme(),
       snapshot: snapshot(phone.viewer()),
+      controls: ['back', 'replay'],
     });
   } else if (message.type === 'shown') phone.frame.classList.add('shown');
   else if (message.type === 'haptic') log(`haptic: ${message.style}`);
   else if (message.type === 'companion') log(`Gaute reacts: ${message.reaction}`);
   else if (message.type === 'failed')
     log(`The page failed before drawing: ${message.reason}`, true);
-  else act(phone, message.id, message.action, message.payload);
+  else if (message.type === 'host-action') {
+    log(`Game control: ${message.action}`);
+    send(phone, { gaute: PROTOCOL, type: 'result', id: message.id, ok: true });
+    if (message.action === 'replay') void restart();
+    else ui.status.textContent = 'Back to games';
+  } else act(phone, message.id, message.action, message.payload);
 });
 
 function startRules(logic: string) {

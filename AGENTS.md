@@ -114,7 +114,10 @@ mountGame(Game);
 - `act` resolves to `{ ok }` or `{ ok: false, reason }`, sets `busy` meanwhile and
   `rejected` to the reason the rules gave; show `t.text(rejected)` near the
   controls (it translates the reason when it is one of your keys).
-- Gaute, the app's companion, stands below the game. Call `gaute('celebrate')`,
+- The game owns the screen, including navigation. Render Back and session controls
+  from `controls` using `host(action)` on `useGame()`; only advertised callbacks
+  are available. There is no app header or tab bar during play.
+- Gaute, the app's companion, is hidden during play. Call `gaute('celebrate')`,
   `gaute('wave')` or `gaute('oops')` at big moments (a win, a new turn, a miss);
   he reacts when the app allows it. Keep it to the moments that matter.
 - `name(handle)` gives the player's name, or "Player 2" when this viewer may not

@@ -178,3 +178,72 @@ test('expanded budgets still reject excess state and views and interrupt runaway
     runGame(`__gaute.defineGame({setup:()=>{for(;;){}},actions:{},view:()=>null});`, setup),
   ).rejects.toThrow(/interrupted/);
 });
+
+test('host controls are bounded and never accepted as arbitrary navigation', () => {
+  for (const action of ['back', 'leave', 'end', 'replay', 'players']) {
+    expect(
+      parseGameMessage(JSON.stringify({ gaute: PROTOCOL, type: 'host-action', id: 1, action })),
+    ).toEqual({ gaute: PROTOCOL, type: 'host-action', id: 1, action });
+  }
+  for (const action of ['https://evil.example', '/settings', 'delete', null]) {
+    expect(parseGameMessage({ gaute: PROTOCOL, type: 'host-action', id: 1, action })).toBeNull();
+  }
+  expect(
+    parseGameMessage({ gaute: PROTOCOL, type: 'host-action', id: 1.5, action: 'back' }),
+  ).toBeNull();
+  expect(
+    parseHostMessage({ gaute: PROTOCOL, type: 'update', snapshot: {}, controls: ['delete'] }),
+  ).toBeNull();
+  expect(
+    parseHostMessage({ gaute: PROTOCOL, type: 'update', snapshot: {}, controls: ['back'] })?.type,
+  ).toBe('update');
+});
+
+test('the client routes advertised host controls separately from rules and follows permission updates', async () => {
+  const { connect } = await import('../sdk/client');
+  const sent: unknown[] = [];
+  const parent = { postMessage: (message: unknown) => sent.push(message) };
+  let receive!: (event: { source: unknown; data: unknown }) => void;
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, {
+    window: {
+      parent,
+      addEventListener: (_: string, handler: typeof receive) => {
+        receive = handler;
+      },
+    },
+    document: { documentElement: { style: { setProperty() {} }, classList: { toggle() {} } } },
+  });
+  try {
+    const client = connect(() => {});
+    const snapshot = {
+      mode: 'shared',
+      status: 'playing',
+      version: 1,
+      you: null,
+      players: [],
+      view: null,
+    };
+    receive({
+      source: parent,
+      data: { gaute: PROTOCOL, type: 'init', locale: 'en', theme, snapshot, controls: ['back'] },
+    });
+    const count = sent.length;
+    expect((await client.host('end')).ok).toBe(false);
+    expect(sent.length).toBe(count);
+    const pending = client.host('back');
+    const message = sent.at(-1) as { id: number };
+    expect(message).toMatchObject({ type: 'host-action', action: 'back' });
+    receive({ source: {}, data: { gaute: PROTOCOL, type: 'result', id: message.id, ok: true } });
+    receive({
+      source: parent,
+      data: { gaute: PROTOCOL, type: 'result', id: message.id, ok: true },
+    });
+    expect(await pending).toEqual({ ok: true });
+    receive({ source: parent, data: { gaute: PROTOCOL, type: 'update', snapshot, controls: [] } });
+    expect((await client.host('back')).ok).toBe(false);
+  } finally {
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument });
+  }
+});
