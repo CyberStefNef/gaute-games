@@ -98,18 +98,61 @@ function draw() {
 const client = connect<typeof game>((state) => {
   latest = state;
   draw();
+  // Menu labels follow the application's language after initialization.
+  const nb = state.locale === 'nb';
+  pause.textContent = nb ? 'Pause' : 'Pause';
+  resume.textContent = nb ? 'Fortsett' : 'Resume';
+  back.textContent = nb ? 'Tilbake til spill' : 'Back to games';
+  back.hidden = !state.controls.includes('back');
 });
+// Plain-DOM games own the same navigation as React games.
+const pause = document.createElement('button');
+pause.textContent = 'Pause';
+pause.style.cssText = 'position:fixed;top:8px;right:8px;min-width:44px;min-height:44px;z-index:10';
+const menu = document.createElement('dialog');
+menu.setAttribute('aria-label', 'Pause menu');
+menu.style.cssText =
+  'margin:auto;padding:20px;border-radius:16px;background:var(--card);color:var(--foreground)';
+const resume = document.createElement('button');
+resume.textContent = 'Resume';
+resume.style.cssText = 'min-height:44px;min-width:100px';
+resume.onclick = () => menu.close();
+menu.append(resume);
+const back = document.createElement('button');
+back.textContent = 'Back to games';
+back.style.cssText = 'min-height:44px;min-width:120px';
+back.onclick = () => {
+  void client.host('back');
+};
+menu.append(back);
+root.append(pause, menu);
+const toggleMenu = () => {
+  if (menu.open) menu.close();
+  else menu.showModal();
+};
+pause.onclick = toggleMenu;
+client.onBack(toggleMenu);
+let moving = false;
 void createScene(viewport, {
   onPick: (pick) => {
     const at = pick.id?.startsWith('tile-') ? Number(pick.id.slice(5)) : null;
-    if (at !== null)
-      void client.act('move', { at }).then((result) => {
-        error.textContent = result.ok
-          ? ''
-          : latest?.locale === 'nb'
-            ? (REASONS[result.reason] ?? result.reason)
-            : result.reason;
-      });
+    if (at !== null && !moving) {
+      moving = true;
+      status.textContent = latest?.locale === 'nb' ? 'Flytter…' : 'Moving…';
+      void client
+        .act('move', { at })
+        .then((result) => {
+          error.textContent = result.ok
+            ? ''
+            : latest?.locale === 'nb'
+              ? (REASONS[result.reason] ?? result.reason)
+              : result.reason;
+        })
+        .finally(() => {
+          moving = false;
+          draw();
+        });
+    }
   },
   onError: (reason) => {
     error.textContent = reason;
@@ -151,4 +194,11 @@ viewport.onkeydown = (event) => {
     draw();
   }
 };
-addEventListener('pagehide', () => scene?.dispose(), { once: true });
+addEventListener(
+  'pagehide',
+  () => {
+    client.dispose();
+    scene?.dispose();
+  },
+  { once: true },
+);

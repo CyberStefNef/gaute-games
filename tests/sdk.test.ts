@@ -247,3 +247,108 @@ test('the client routes advertised host controls separately from rules and follo
     Object.assign(globalThis, { window: previousWindow, document: previousDocument });
   }
 });
+
+function bridge() {
+  const originalWindow = globalThis.window,
+    originalDocument = globalThis.document;
+  const sent: any[] = [];
+  let receive!: (event: any) => void;
+  let writes = 0;
+  const parent = { postMessage: (message: unknown) => sent.push(message) };
+  Object.assign(globalThis, {
+    window: {
+      parent,
+      addEventListener: (_: string, handler: typeof receive) => {
+        receive = handler;
+      },
+      removeEventListener() {},
+    },
+    document: {
+      documentElement: {
+        style: {
+          setProperty() {
+            writes++;
+          },
+        },
+        classList: { toggle() {} },
+      },
+    },
+  });
+  const send = (data: any) => receive({ source: parent, data: { gaute: PROTOCOL, ...data } });
+  const snapshot = (version: number) => ({
+    mode: 'phones',
+    status: 'playing',
+    version,
+    you: 'p1',
+    players: [],
+    view: null,
+  });
+  return {
+    sent,
+    send,
+    snapshot,
+    writes: () => writes,
+    restore: () =>
+      Object.assign(globalThis, { window: originalWindow, document: originalDocument }),
+  };
+}
+
+test('an action waits for its committed view in either message order without rewriting theme tokens', async () => {
+  const { connect } = await import('../sdk/client');
+  for (const stateFirst of [true, false]) {
+    const h = bridge();
+    const client = connect(() => {});
+    try {
+      h.send({
+        type: 'init',
+        locale: 'en',
+        theme: { ...theme, colors: { background: '#fff' } },
+        snapshot: h.snapshot(1),
+      });
+      const writes = h.writes();
+      let settled = false;
+      const promise = client.act('vote', null).then((result) => {
+        settled = true;
+        return result;
+      });
+      const { id } = h.sent.at(-1);
+      if (stateFirst) h.send({ type: 'update', snapshot: h.snapshot(3) });
+      h.send({ type: 'result', id, ok: true, version: 3 });
+      await Promise.resolve();
+      expect(settled).toBe(stateFirst);
+      if (!stateFirst) {
+        h.send({ type: 'update', snapshot: h.snapshot(2) });
+        await Promise.resolve();
+        expect(settled).toBe(false);
+        h.send({ type: 'update', snapshot: h.snapshot(3) });
+      }
+      expect(await promise).toEqual({ ok: true, version: 3 });
+      expect(h.writes()).toBe(writes);
+    } finally {
+      client.dispose();
+      h.restore();
+    }
+  }
+});
+
+test('Back belongs to the game and disposing the bridge settles pending requests', async () => {
+  const { connect } = await import('../sdk/client');
+  const h = bridge();
+  const client = connect(() => {});
+  try {
+    h.send({ type: 'init', locale: 'en', theme, snapshot: h.snapshot(1), controls: ['back'] });
+    let backs = 0;
+    const stop = client.onBack(() => {
+      backs++;
+    });
+    h.send({ type: 'back' });
+    expect(backs).toBe(1);
+    stop();
+    const pending = client.act('vote', null);
+    client.dispose();
+    expect((await pending).ok).toBe(false);
+  } finally {
+    client.dispose();
+    h.restore();
+  }
+});

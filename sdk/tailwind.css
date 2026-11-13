@@ -53,3 +53,15 @@
     user-select: none;
   }
 }
+
+/* Include the optional SDK pause menu when the package is installed in node_modules. */
+@source './react.tsx';
+
+button {
+  touch-action: manipulation;
+}
+button:active:not(:disabled),
+button[data-pending='true'] {
+  box-shadow: inset 0 0 0 2px var(--primary);
+  filter: brightness(1.12);
+}

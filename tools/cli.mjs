@@ -25,6 +25,16 @@ try {
       server: { host: '127.0.0.1', port: 4800 },
     });
     await server.listen();
+    for (const signal of ['SIGINT', 'SIGTERM'])
+      process.once(signal, () => {
+        void server.close().then(
+          () => process.exit(0),
+          (error) => {
+            console.error(error.message);
+            process.exit(1);
+          },
+        );
+      });
     server.printUrls();
   } else {
     throw Error('Usage: gaute-game new <slug> | dev [folder] | check [folder] | build [folder]');

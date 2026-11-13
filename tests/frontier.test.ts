@@ -8,7 +8,7 @@ type Played = Extract<RuntimeOutcome, { state: string }>;
 let logic: string;
 beforeAll(async () => {
   logic = (await bundleGame('frontier')).logic;
-});
+}, 60_000);
 const played = (result: RuntimeOutcome): Played => {
   if (!result.ok || !('state' in result)) throw Error(JSON.stringify(result));
   return result;

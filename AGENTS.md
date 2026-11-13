@@ -111,6 +111,8 @@ mountGame(Game);
   what `view` returns, `act` accepts only the game's actions with their
   payloads, and `t` only your keys with their `{placeholders}`. A mistake is a
   type error in `vp check`.
+- Use typed `pending.action` and `pending.payload` for immediate selected-state
+  feedback. Keep correctness, scores and other players’ choices server-owned.
 - `act` resolves to `{ ok }` or `{ ok: false, reason }`, sets `busy` meanwhile and
   `rejected` to the reason the rules gave; show `t.text(rejected)` near the
   controls (it translates the reason when it is one of your keys).

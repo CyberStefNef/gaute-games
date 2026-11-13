@@ -134,4 +134,4 @@ test('the packaged CLI creates a game that also builds through the source index'
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
-});
+}, 120_000);

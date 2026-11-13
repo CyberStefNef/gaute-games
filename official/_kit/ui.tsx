@@ -1,8 +1,8 @@
 // Building blocks shared by the official games, styled with the app's theme
 // through Tailwind. Creators are free to use anything else.
-import { useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { AnyGameRules } from '@gaute/games-sdk/logic';
-import { gameClient } from '@gaute/games-sdk/react';
+import { gameClient, PauseMenu as GameControls } from '@gaute/games-sdk/react';
 
 // These parts work in any game, so they only use what every game has.
 const { useGame } = gameClient<AnyGameRules>();
@@ -88,16 +88,26 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { primary?: boolean }) {
   const { busy } = useGame();
+  const [pressed, setPressed] = useState(false);
+  useEffect(() => {
+    if (!busy) setPressed(false);
+  }, [busy, pressed]);
   return (
     <button
       type="button"
-      disabled={busy || props.disabled}
       className={`min-h-12 rounded-xl px-4 font-semibold transition-opacity active:opacity-70 disabled:opacity-50 ${
         primary
           ? 'bg-primary text-primary-foreground'
           : 'border border-border bg-card text-card-foreground'
       } ${className}`}
       {...props}
+      disabled={busy || props.disabled}
+      aria-busy={(busy && pressed) || undefined}
+      onClick={(event) => {
+        setPressed(true);
+        props.onClick?.(event);
+      }}
+      data-pending={(busy && pressed) || undefined}
     />
   );
 }
@@ -112,18 +122,29 @@ export function PlayerChoice({
   chosen: string | null;
   onChoose: (handle: string) => void;
 }) {
-  const { name, playing, busy } = useGame();
+  const { name, playing, busy, pending } = useGame();
+  const payload = pending?.payload;
+  const pendingChoice =
+    payload &&
+    typeof payload === 'object' &&
+    !Array.isArray(payload) &&
+    'target' in payload &&
+    typeof payload.target === 'string'
+      ? payload.target
+      : null;
   return (
     <div className="flex w-full flex-col gap-2">
       {handles.map((handle) => {
-        const selected = chosen === handle;
+        const selected = (busy && pendingChoice !== null ? pendingChoice : chosen) === handle;
         return (
           <button
             key={handle}
             type="button"
             aria-pressed={selected}
             disabled={busy || !playing}
-            onClick={() => onChoose(handle)}
+            onClick={() => {
+              onChoose(handle);
+            }}
             className={`flex min-h-12 items-center justify-between rounded-xl border px-4 text-left font-medium transition-colors disabled:opacity-60 ${
               selected
                 ? 'border-primary bg-primary text-primary-foreground'
@@ -302,81 +323,4 @@ export function PackPicker({
   );
 }
 
-/** The game owns its pause menu; opening it never pauses other players. */
-export function GameControls() {
-  const { controls, host, locale, busy, rejected, mode } = useGame();
-  const dialog = useRef<HTMLDialogElement>(null);
-  const nb = locale === 'nb';
-  const labels = nb
-    ? {
-        back: 'Tilbake til spill',
-        leave: 'Forlat spillet',
-        end: 'Avslutt spillet',
-        replay: 'Spill igjen',
-        players: 'Endre spillere',
-      }
-    : {
-        back: 'Back to games',
-        leave: 'Leave game',
-        end: 'End game',
-        replay: 'Play again',
-        players: 'Change players',
-      };
-  if (!controls.length) return null;
-  return (
-    <>
-      <button
-        type="button"
-        aria-label={nb ? 'Pausemeny' : 'Pause menu'}
-        onClick={() => dialog.current?.showModal()}
-        className="fixed top-2 right-2 z-50 flex size-11 items-center justify-center rounded-xl border border-border bg-background/90 text-primary"
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="currentColor">
-          <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
-        </svg>
-      </button>
-      <dialog
-        ref={dialog}
-        aria-label={nb ? 'Pausemeny' : 'Pause menu'}
-        className="fixed inset-0 m-auto w-[calc(100%-32px)] max-w-sm rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-xl backdrop:bg-black/60"
-      >
-        <div className="flex flex-col gap-3">
-          <h2 className="text-xl font-bold">{nb ? 'Pausemeny' : 'Pause menu'}</h2>
-          {mode === 'phones' ? (
-            <p className="text-sm text-muted-foreground">
-              {nb
-                ? 'Spillet fortsetter for de andre spillerne.'
-                : 'The game continues for the other players.'}
-            </p>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => dialog.current?.close()}
-            className="min-h-12 rounded-xl bg-primary px-4 font-semibold text-primary-foreground"
-          >
-            {nb ? 'Fortsett' : 'Resume'}
-          </button>
-          {controls.map((action) => (
-            <button
-              key={action}
-              type="button"
-              disabled={busy}
-              onClick={async () => {
-                const result = await host(action);
-                if (result.ok) dialog.current?.close();
-              }}
-              className="min-h-12 rounded-xl border border-border px-4 font-semibold disabled:opacity-50"
-            >
-              {labels[action]}
-            </button>
-          ))}
-          {rejected ? (
-            <p role="alert" className="text-sm text-destructive">
-              {rejected}
-            </p>
-          ) : null}
-        </div>
-      </dialog>
-    </>
-  );
-}
+export { GameControls };

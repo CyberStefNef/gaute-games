@@ -6,7 +6,7 @@
 //   const { mountGame, useGame } = gameClient<typeof game>();
 //   const { view, act } = useGame();   // view: what `view` returns
 //   act('vote', { target: 'p2' });     // checked against the action's validator
-import { useCallback, useSyncExternalStore, type ComponentType } from 'react';
+import { useCallback, useEffect, useRef, useSyncExternalStore, type ComponentType } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import {
@@ -19,12 +19,30 @@ import {
   type Player,
 } from './client';
 import type { HostAction } from './protocol';
-import type { ActionName, AnyGameRules, Json, Mode, PlayerHandle, ViewOf } from './logic';
+import type {
+  ActionName,
+  AnyGameRules,
+  Json,
+  Mode,
+  PlayerHandle,
+  PayloadOf,
+  ViewOf,
+} from './logic';
+
+export type PendingAction<Rules extends AnyGameRules> = {
+  [Name in ActionName<Rules>]: {
+    action: Name;
+    payload: PayloadOf<Rules, Name>;
+    view: ViewOf<Rules>;
+  };
+}[ActionName<Rules>];
 
 type Store = {
   state: GameState<unknown>;
   /** True while an action is on its way; buttons should wait for it. */
   busy: boolean;
+  pending: { action: string; payload: unknown; view: unknown } | null;
+  hostBusy: boolean;
   /** The reason the last action was rejected, until the next action. */
   rejected: string | null;
 };
@@ -71,6 +89,8 @@ export type Game<Rules extends AnyGameRules> = {
   controls: HostAction[];
   host: (action: HostAction) => Promise<ActResult>;
   busy: boolean;
+  pending: PendingAction<Rules> | null;
+  hostBusy: boolean;
   rejected: string | null;
   /** Native haptic feedback on phones; ignored on the web. */
   haptic: (style?: Haptic) => void;
@@ -83,22 +103,42 @@ function mountGame(Game: ComponentType) {
   const root = createRoot(document.getElementById('app')!);
   session = connect((state) => {
     if (store) return update({ state });
-    store = { state, busy: false, rejected: null };
+    store = { state, busy: false, pending: null, hostBusy: false, rejected: null };
     // The first render completes before the app reveals the page, so it never flashes.
     flushSync(() => root.render(<Game />));
   });
 }
 
 async function act(action: string, payload?: unknown): Promise<ActResult> {
-  update({ busy: true, rejected: null });
+  if (store!.busy)
+    return {
+      ok: false,
+      reason:
+        store!.state.locale === 'nb'
+          ? 'Vent på forrige handling.'
+          : 'Wait for the previous action.',
+    };
+  update({
+    busy: true,
+    pending: { action, payload: payload ?? null, view: store!.state.snapshot.view },
+    rejected: null,
+  });
   session!.haptic('selection');
-  const result = await (session!.act as (action: string, payload?: unknown) => Promise<ActResult>)(
-    action,
-    payload,
-  );
-  update({ busy: false, rejected: result.ok ? null : result.reason });
-  if (!result.ok) session!.haptic('error');
-  return result;
+  try {
+    const result = await (
+      session!.act as (action: string, payload?: unknown) => Promise<ActResult>
+    )(action, payload);
+    update({ rejected: result.ok ? null : result.reason });
+    if (!result.ok) session!.haptic('error');
+    return result;
+  } finally {
+    update({ busy: false, pending: null });
+  }
+}
+
+/** Use the game's own navigation for Android Back, including pause menus. */
+export function useGameBack(handler: () => void) {
+  useEffect(() => session!.onBack(handler), [handler]);
 }
 
 function useGame<Rules extends AnyGameRules>(): Game<Rules> {
@@ -127,15 +167,22 @@ function useGame<Rules extends AnyGameRules>(): Game<Rules> {
     name,
     act: act as Game<Rules>['act'],
     busy,
+    pending: current.pending as PendingAction<Rules> | null,
+    hostBusy: current.hostBusy,
     rejected,
     haptic,
     gaute,
     controls: state.controls,
     host: async (action) => {
-      update({ busy: true, rejected: null });
-      const result = await session!.host(action);
-      update({ busy: false, rejected: result.ok ? null : result.reason });
-      return result;
+      if (store!.hostBusy) return { ok: false, reason: 'Connection needed' };
+      update({ hostBusy: true, rejected: null });
+      try {
+        const result = await session!.host(action);
+        update({ rejected: result.ok ? null : result.reason });
+        return result;
+      } finally {
+        update({ hostBusy: false });
+      }
     },
   };
 }
@@ -189,4 +236,106 @@ export function useStrings<const En extends Record<string, string>>(strings: {
     Object.hasOwn(strings.en, value) ? fill(table[value] ?? value) : value;
   // The checked signature is Translate's; at runtime keys and values are plain strings.
   return Object.assign(translate, { text }) as unknown as Translate<En>;
+}
+
+/** The game owns its pause menu; opening it never pauses other players. */
+export function PauseMenu() {
+  const { controls, host, locale, hostBusy, busy, rejected, mode } = useGame();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const toggle = useCallback(() => {
+    if (dialog.current?.open) dialog.current.close();
+    else dialog.current?.showModal();
+  }, []);
+  useGameBack(toggle);
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !dialog.current?.open) {
+        event.preventDefault();
+        toggle();
+      }
+    };
+    document.addEventListener('keydown', keydown);
+    return () => document.removeEventListener('keydown', keydown);
+  }, [toggle]);
+  const nb = locale === 'nb';
+  const labels = nb
+    ? {
+        back: 'Tilbake til spill',
+        leave: 'Forlat spillet',
+        end: 'Avslutt spillet',
+        replay: 'Spill igjen',
+        players: 'Endre spillere',
+      }
+    : {
+        back: 'Back to games',
+        leave: 'Leave game',
+        end: 'End game',
+        replay: 'Play again',
+        players: 'Change players',
+      };
+  if (!controls.length) return null;
+  return (
+    <>
+      {busy ? (
+        <div
+          role="status"
+          className="pointer-events-none fixed bottom-3 left-3 z-50 rounded-xl bg-background/90 px-3 py-2 text-sm text-muted-foreground"
+        >
+          {nb ? 'Sender…' : 'Sending…'}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        aria-label={nb ? 'Pausemeny' : 'Pause menu'}
+        onClick={() => dialog.current?.showModal()}
+        className="fixed top-2 right-2 z-50 flex size-11 items-center justify-center rounded-xl border border-border bg-background/90 text-primary"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="currentColor">
+          <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
+        </svg>
+      </button>
+      <dialog
+        ref={dialog}
+        aria-label={nb ? 'Pausemeny' : 'Pause menu'}
+        className="fixed inset-0 m-auto w-[calc(100%-32px)] max-w-sm rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-xl backdrop:bg-black/60"
+      >
+        <div className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold">{nb ? 'Pausemeny' : 'Pause menu'}</h2>
+          {mode === 'phones' ? (
+            <p className="text-sm text-muted-foreground">
+              {nb
+                ? 'Spillet fortsetter for de andre spillerne.'
+                : 'The game continues for the other players.'}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => dialog.current?.close()}
+            className="min-h-12 rounded-xl bg-primary px-4 font-semibold text-primary-foreground"
+          >
+            {nb ? 'Fortsett' : 'Resume'}
+          </button>
+          {controls.map((action) => (
+            <button
+              key={action}
+              type="button"
+              disabled={hostBusy}
+              onClick={async () => {
+                const result = await host(action);
+                if (result.ok) dialog.current?.close();
+              }}
+              className="min-h-12 rounded-xl border border-border px-4 font-semibold disabled:opacity-50"
+            >
+              {labels[action]}
+            </button>
+          ))}
+          {rejected ? (
+            <p role="alert" className="text-sm text-destructive">
+              {rejected}
+            </p>
+          ) : null}
+        </div>
+      </dialog>
+    </>
+  );
 }

@@ -99,11 +99,19 @@ export type HostMessage =
     }
   | { gaute: typeof PROTOCOL; type: 'update'; snapshot: Snapshot; controls?: HostAction[] }
   | { gaute: typeof PROTOCOL; type: 'theme'; theme: Theme }
-  | { gaute: typeof PROTOCOL; type: 'result'; id: number; ok: boolean; reason?: string };
+  | { gaute: typeof PROTOCOL; type: 'back' }
+  | {
+      gaute: typeof PROTOCOL;
+      type: 'result';
+      id: number;
+      ok: boolean;
+      reason?: string;
+      version?: number;
+    };
 
 export type GameMessage =
   | { gaute: typeof PROTOCOL; type: 'host-action'; id: number; action: HostAction }
-  | { gaute: typeof PROTOCOL; type: 'ready' }
+  | { gaute: typeof PROTOCOL; type: 'ready'; backHandling?: boolean }
   /** The first state has been drawn; the app reveals the page now. */
   | { gaute: typeof PROTOCOL; type: 'shown' }
   | { gaute: typeof PROTOCOL; type: 'act'; id: number; action: string; payload: Json }
@@ -140,7 +148,12 @@ export function parseGameMessage(raw: unknown): GameMessage | null {
           action: message.action as HostAction,
         }
       : null;
-  if (message.type === 'ready') return { gaute: PROTOCOL, type: 'ready' };
+  if (message.type === 'ready')
+    return {
+      gaute: PROTOCOL,
+      type: 'ready',
+      ...(message.backHandling === true ? { backHandling: true } : {}),
+    };
   if (message.type === 'shown') return { gaute: PROTOCOL, type: 'shown' };
   if (message.type === 'failed')
     return {
@@ -201,10 +214,15 @@ export function parseHostMessage(raw: unknown): HostMessage | null {
             message.controls.every((action) => HOST_ACTIONS.includes(action as HostAction))))
         ? (message as HostMessage)
         : null;
+    case 'back':
+      return { gaute: PROTOCOL, type: 'back' };
     case 'theme':
       return record(message.theme) ? (message as HostMessage) : null;
     case 'result':
-      return Number.isSafeInteger(message.id) && typeof message.ok === 'boolean'
+      return Number.isSafeInteger(message.id) &&
+        typeof message.ok === 'boolean' &&
+        (message.version === undefined ||
+          (Number.isSafeInteger(message.version) && Number(message.version) >= 0))
         ? (message as HostMessage)
         : null;
     default:
