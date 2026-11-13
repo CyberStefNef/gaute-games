@@ -63,6 +63,8 @@ async function devCatalogue(cli: string, project: string) {
 
 // Copy the npm file list under node_modules. A symlink to the checkout would
 // conceal Node's refusal to strip TypeScript from installed dependencies.
+// Includes two CLI sandbox playtests, indexed-source verification and a live preview.
+// Its budget covers the complete pipeline rather than one individual game run.
 test('the packaged CLI creates a game that also builds through the source index', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'gaute-installed-cli-'));
   const modules = path.join(dir, 'node_modules');
@@ -134,4 +136,4 @@ test('the packaged CLI creates a game that also builds through the source index'
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
-}, 120_000);
+}, 300_000);
